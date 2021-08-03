@@ -1,24 +1,24 @@
-import React from 'react';
-import logo from './logo.svg';
+import React, { useState } from 'react';
 import './App.css';
+import firebase from "firebase";
+import TextField from '@material-ui/core/TextField';
 
+interface cls {
+  name: string;
+  teacher: string;
+  period: number;
+}
 function App() {
+  const firebaseApp = firebase.apps[0];
+  const [name, setName] = useState<string>()
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div>
+      <h1>React & Firebase</h1>
+      <h2>By @farazamiruddin</h2>
+      <TextField onChange={(e) => {
+        setName(e.target.value)
+      }}/>
+      <p>{name}</p>
     </div>
   );
 }
