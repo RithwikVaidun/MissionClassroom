@@ -1,10 +1,12 @@
-import React from 'react';
-import ReactDOM from 'react-dom';
-import './index.css';
-import App from './App';
-import reportWebVitals from './reportWebVitals';
+import React from "react";
+import ReactDOM from "react-dom";
+import "./index.css";
+import App from "./App";
+import reportWebVitals from "./reportWebVitals";
 import firebase from "firebase";
+import SignIn from "./SignIn";
 
+import { BrowserRouter as Router, Switch, Route, Link } from "react-router-dom";
 
 var firebaseConfig = {
   apiKey: "AIzaSyDWZVyOM16RflypWWXcC1Hu2R-a1e50glY",
@@ -13,15 +15,18 @@ var firebaseConfig = {
   storageBucket: "fridge-ba431.appspot.com",
   messagingSenderId: "748800175843",
   appId: "1:748800175843:web:3022c69d44f06654b39fd6",
-  measurementId: "G-2EWECPPD9P"
+  measurementId: "G-2EWECPPD9P",
 };
 firebase.initializeApp(firebaseConfig);
 
 ReactDOM.render(
   <React.StrictMode>
-    <App />
+    <Router>
+      <Route exact path="/" component={App} />
+      <Route exact path="/signin" component={SignIn} />
+    </Router>
   </React.StrictMode>,
-  document.getElementById('root')
+  document.getElementById("root")
 );
 
 // If you want to start measuring performance in your app, pass a function
