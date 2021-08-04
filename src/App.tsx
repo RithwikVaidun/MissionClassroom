@@ -11,6 +11,12 @@ import Typography from "@material-ui/core/Typography";
 
 import IconButton from "@material-ui/core/IconButton";
 import MenuIcon from "@material-ui/icons/Menu";
+import InputLabel from "@material-ui/core/InputLabel";
+import MenuItem from "@material-ui/core/MenuItem";
+import FormHelperText from "@material-ui/core/FormHelperText";
+import FormControl from "@material-ui/core/FormControl";
+import Select from "@material-ui/core/Select";
+import Autocomplete from "@material-ui/lab/Autocomplete";
 
 interface Cls {
   period: number;
@@ -28,42 +34,94 @@ const useStyles = makeStyles((theme: Theme) =>
     title: {
       flexGrow: 1,
     },
+    formControl: {
+      margin: theme.spacing(1),
+      minWidth: 120,
+    },
+    selectEmpty: {
+      marginTop: theme.spacing(2),
+    },
   })
 );
 
 function App() {
   const firebaseApp = firebase.apps[0];
+  const db = firebaseApp.firestore();
   const [cls, setCls] = useState<Cls[]>([{ period: 0, teacher: "" }]);
+  const [name, setName] = useState<string>("");
   const classes = useStyles();
 
   function writetoFirebase(e: any) {
     e.preventDefault();
-    firebaseApp.firestore().collection("test").doc("test").set(cls);
+
+    for (var c of cls) {
+      if (c !== undefined) {
+        var periods: any = {};
+
+        periods[c.period] = ["name", "name2"];
+        console.log(periods);
+
+        db.collection("Teachers").doc(c.teacher).set(periods);
+      }
+    }
   }
+  var teachers: string[] = ["test", "test2"];
+
+  // db.collection("Teachers")
+  //   .doc("Teachers")
+  //   .onSnapshot((doc) => {
+  //     teachers = doc.data().teachers;
+  //   });
 
   const items = [];
   for (var x = 0; x < 6; x++) {
     let i = x;
     items.push(
       <>
-        <TextField
-          placeholder="Period"
-          onChange={(e) => {
-            let newArr = [...cls];
-            newArr[i] = { ...newArr[i], period: parseInt(e.target.value) };
-            setCls(newArr);
-          }}
-        />
-        <TextField
-          placeholder="Teacher"
-          onChange={(e) => {
-            let newArr = [...cls];
-            newArr[i] = { ...newArr[i], teacher: e.target.value };
-            setCls(newArr);
-          }}
-        />
-
-        <br />
+        <div style={{ float: "left" }}>
+          <InputLabel>Period</InputLabel>
+          <Select
+            style={{ minWidth: 120 }}
+            labelId="demo-simple-select-label"
+            label="Period"
+            onChange={(e: any) => {
+              let newArr = [...cls];
+              newArr[i] = { ...newArr[i], period: parseInt(e.target.value) };
+              setCls(newArr);
+            }}
+          >
+            <MenuItem value={1}>1</MenuItem>
+            <MenuItem value={2}>2</MenuItem>
+            <MenuItem value={3}>3</MenuItem>
+            <MenuItem value={4}>4</MenuItem>
+            <MenuItem value={5}>5</MenuItem>
+            <MenuItem value={6}>6</MenuItem>
+          </Select>
+        </div>
+        <div style={{ float: "left" }}>
+          <Autocomplete
+            options={teachers}
+            style={{ width: 130 }}
+            id="debug"
+            debug
+            onChange={(e, value: any) => {
+              let newArr = [...cls];
+              newArr[i] = { ...newArr[i], teacher: value };
+              setCls(newArr);
+            }}
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                label="Teacher"
+                onChange={(e: any) => {
+                  let newArr = [...cls];
+                  newArr[i] = { ...newArr[i], teacher: e.target.value };
+                  setCls(newArr);
+                }}
+              />
+            )}
+          ></Autocomplete>
+        </div>
       </>
     );
   }
@@ -89,9 +147,22 @@ function App() {
           </Toolbar>
         </AppBar>
       </div>
-      {items}
-      <Button onClick={writetoFirebase}> Submit </Button>
 
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          height: "60vh",
+        }}
+      >
+        <ul>
+          {items.map((reptile) => (
+            <div>{reptile}</div>
+          ))}
+        </ul>
+      </div>
+      <Button onClick={writetoFirebase}> Submit </Button>
       <p>{JSON.stringify(cls)}</p>
     </div>
   );
