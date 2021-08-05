@@ -61,7 +61,7 @@ function App() {
         periods[c.period] = ["name", "name2"];
         console.log(periods);
 
-        db.collection("Teachers").doc(c.teacher).set(periods);
+        db.collection("Teachers").doc(c.teacher).update(periods);
       }
     }
   }
@@ -162,7 +162,18 @@ function App() {
           ))}
         </ul>
       </div>
-      <Button onClick={writetoFirebase}> Submit </Button>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
+        <Button variant="contained" color="primary" onClick={writetoFirebase}>
+          Submit
+        </Button>
+      </div>
+
       <p>{JSON.stringify(cls)}</p>
     </div>
   );
