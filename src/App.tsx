@@ -48,7 +48,7 @@ function App() {
   const firebaseApp = firebase.apps[0];
   const db = firebaseApp.firestore();
   const [cls, setCls] = useState<Cls[]>([{ period: 0, teacher: "" }]);
-  const [name, setName] = useState<string>("");
+  const [myuser, setUser] = useState<firebase.User | null>(null);
   const classes = useStyles();
 
   function writetoFirebase(e: any) {
@@ -72,6 +72,16 @@ function App() {
   //   .onSnapshot((doc) => {
   //     teachers = doc.data().teachers;
   //   });
+
+  firebase.auth().onAuthStateChanged(function (user) {
+    if (user) {
+      setUser(user);
+      // User is signed in.
+    } else {
+      setUser(null);
+      // No user is signed in.
+    }
+  });
 
   const items = [];
   for (var x = 0; x < 6; x++) {
@@ -141,9 +151,25 @@ function App() {
             <Typography variant="h6" className={classes.title}>
               Mission Classroom
             </Typography>
-            <Button color="inherit" href="/signin">
-              Login
-            </Button>
+            {!myuser ? (
+              <Button
+                onClick={() => {
+                  const googleAuthProvider =
+                    new firebase.auth.GoogleAuthProvider();
+                  firebase.auth().signInWithRedirect(googleAuthProvider);
+                }}
+              >
+                Login
+              </Button>
+            ) : (
+              <Button
+                onClick={() => {
+                  firebase.auth().signOut();
+                }}
+              >
+                Logout
+              </Button>
+            )}
           </Toolbar>
         </AppBar>
       </div>
