@@ -34,12 +34,23 @@ const useStyles = makeStyles((theme: Theme) =>
 function App() {
   const firebaseApp = firebase.apps[0];
   const [cls, setCls] = useState<Cls[]>([{ period: 0, teacher: "" }]);
+  const [myuser, setUser] = useState<firebase.User | null>(null);
   const classes = useStyles();
 
   function writetoFirebase(e: any) {
     e.preventDefault();
     firebaseApp.firestore().collection("test").doc("test").set(cls);
   }
+
+  firebase.auth().onAuthStateChanged(function (user) {
+    if (user) {
+      setUser(user);
+      // User is signed in.
+    } else {
+      setUser(null);
+      // No user is signed in.
+    }
+  });
 
   const items = [];
   for (var x = 0; x < 6; x++) {
@@ -83,13 +94,29 @@ function App() {
             <Typography variant="h6" className={classes.title}>
               Mission Classroom
             </Typography>
-            <Button color="inherit" href="/signin">
-              Login
-            </Button>
+            {!myuser ? (
+              <Button
+                onClick={() => {
+                  const googleAuthProvider =
+                    new firebase.auth.GoogleAuthProvider();
+                  firebase.auth().signInWithRedirect(googleAuthProvider);
+                }}
+              >
+                Login
+              </Button>
+            ) : (
+              <Button
+                onClick={() => {
+                  firebase.auth().signOut();
+                }}
+              >
+                Logout
+              </Button>
+            )}
           </Toolbar>
         </AppBar>
       </div>
-      {items}
+      {JSON.stringify(myuser)}
       <Button onClick={writetoFirebase}> Submit </Button>
 
       <p>{JSON.stringify(cls)}</p>
