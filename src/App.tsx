@@ -13,13 +13,11 @@ import IconButton from "@material-ui/core/IconButton";
 import MenuIcon from "@material-ui/icons/Menu";
 import InputLabel from "@material-ui/core/InputLabel";
 import MenuItem from "@material-ui/core/MenuItem";
-import FormHelperText from "@material-ui/core/FormHelperText";
-import FormControl from "@material-ui/core/FormControl";
 import Select from "@material-ui/core/Select";
 import Autocomplete from "@material-ui/lab/Autocomplete";
 
 interface Cls {
-  period: number;
+  period: string;
   teacher: string;
 }
 
@@ -47,24 +45,53 @@ const useStyles = makeStyles((theme: Theme) =>
 function App() {
   const firebaseApp = firebase.apps[0];
   const db = firebaseApp.firestore();
-  const [cls, setCls] = useState<Cls[]>([{ period: 0, teacher: "" }]);
-  const [myuser, setUser] = useState<firebase.User | null>(null);
+  const [cls, setCls] = useState<Cls[]>([{ period: "", teacher: "" }]);
+  const [user, setUser] = useState<firebase.User | null>(null);
   const classes = useStyles();
 
   function writetoFirebase(e: any) {
-    e.preventDefault();
-
+    if (!user) return;
     for (var c of cls) {
+      var periods: any = {};
       if (c !== undefined) {
-        var periods: any = {};
-
-        periods[c.period] = ["name", "name2"];
-        console.log(periods);
-
-        db.collection("Teachers").doc(c.teacher).update(periods);
+        db.collection("Teachers")
+          .doc(c.teacher)
+          .get()
+          .then((doc) => {
+            if (doc.exists) {
+              periods = doc.data();
+              if (periods[c.period]) {
+                periods[c.period].push({
+                  name: user.displayName,
+                  id: user.uid,
+                });
+              } else {
+                console.log("period does not exist");
+                periods[c.period] = [{ name: user.displayName, id: user.uid }];
+              }
+              db.collection("Teachers")
+                .doc(c.teacher)
+                .update(periods, { merge: true });
+            } else {
+              console.log("does not exist");
+              periods[c.period] = [{ name: user.displayName, id: user.uid }];
+              db.collection("Teachers")
+                .doc(c.teacher)
+                .set(periods)
+                .then(() => {
+                  console.log("Document successfully written!");
+                })
+                .catch((error) => {
+                  console.error("Error writing document: ", error);
+                });
+            }
+          });
+        // .then(() => {});
       }
     }
   }
+
+  function test() {}
   var teachers: string[] = ["test", "test2"];
 
   // db.collection("Teachers")
@@ -92,11 +119,11 @@ function App() {
           <InputLabel>Period</InputLabel>
           <Select
             style={{ minWidth: 120 }}
-            labelId="demo-simple-select-label"
             label="Period"
+            defaultValue=""
             onChange={(e: any) => {
               let newArr = [...cls];
-              newArr[i] = { ...newArr[i], period: parseInt(e.target.value) };
+              newArr[i] = { ...newArr[i], period: e.target.value };
               setCls(newArr);
             }}
           >
@@ -112,7 +139,6 @@ function App() {
           <Autocomplete
             options={teachers}
             style={{ width: 130 }}
-            id="debug"
             debug
             onChange={(e, value: any) => {
               let newArr = [...cls];
@@ -151,7 +177,7 @@ function App() {
             <Typography variant="h6" className={classes.title}>
               Mission Classroom
             </Typography>
-            {!myuser ? (
+            {!user ? (
               <Button
                 onClick={() => {
                   const googleAuthProvider =
@@ -183,8 +209,8 @@ function App() {
         }}
       >
         <ul>
-          {items.map((reptile) => (
-            <div>{reptile}</div>
+          {items.map((reptile, i) => (
+            <div key={i}>{reptile}</div>
           ))}
         </ul>
       </div>
@@ -200,6 +226,7 @@ function App() {
         </Button>
       </div>
 
+      {/* <p>{JSON.stringify(user)}</p> */}
       <p>{JSON.stringify(cls)}</p>
     </div>
   );
