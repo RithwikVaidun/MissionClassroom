@@ -16,8 +16,10 @@ import MenuItem from "@material-ui/core/MenuItem";
 import Select from "@material-ui/core/Select";
 import Autocomplete from "@material-ui/lab/Autocomplete";
 import Card from "@material-ui/core/Card";
+import CardActions from "@material-ui/core/CardActions";
 import CardContent from "@material-ui/core/CardContent";
-
+// import SignIn from "./SignIn";
+// import MyClasses from "./MyClasses";
 interface Cls {
   period: string;
   teacher: string;
@@ -51,14 +53,8 @@ function App() {
   const firebaseApp = firebase.apps[0];
   const db = firebaseApp.firestore();
   const [cls, setCls] = useState<Cls[]>([{ period: "", teacher: "" }]);
-  const [fCls, setFcls] = useState<any>(null);
   const [user, setUser] = useState<firebase.User | null>(null);
-<<<<<<< HEAD
-  // const [cls, setCls] = useState<Cls[]>([{ period: "", teacher: "" }]);
-
-=======
-  const [submittedClasses, setSubmittedClassses] = useState<boolean>(false);
->>>>>>> origin/userCheck
+  const [submittedClasses, setSubmittedClassses] = useState<any>(null);
   const classes = useStyles();
   //useEffect get to get user
   useEffect(() => {
@@ -68,6 +64,7 @@ function App() {
       setUser(null);
     }
   }, []);
+
   useEffect(() => {
     if (user) {
       db.collection("Users")
@@ -75,7 +72,7 @@ function App() {
         .get()
         .then((snapshot) => {
           if (snapshot.exists) {
-            setSubmittedClassses(true);
+            setSubmittedClassses(snapshot.data());
           }
         });
     }
@@ -92,7 +89,7 @@ function App() {
     db.collection("Users").doc(user.uid).set(demo);
 
     var batch = db.batch();
-    cls.forEach((c: Cls, i: number, a: Cls[]) => {
+    cls.forEach((c, i, a) => {
       var periods: any = {};
       var docRef = db.collection("Teachers").doc(c.teacher);
       docRef.get().then((doc) => {
@@ -119,22 +116,21 @@ function App() {
   }
 
   function test() {
-    // console.log(userClasses);
+    return "ji";
   }
-  // function getClassmates(c: any) {
-  //   var friends: any = [];
-  //   db.collection("Teachers")
-  //     .doc(c.teacher)
-  //     .get()
-  //     .then((doc) => {
-  //       if (doc.exists) {
-  //         var cls: any = doc.data();
-  //         friends = cls[c.period].map((a: any) => a.name);
-  //       }
-  //     });
-  //   console.log(friends);
-  //   return friends;
-  // }
+  function getClassmates(c: any) {
+    var friends: any = [];
+    // db.collection("Teachers")
+    //   .doc(c.teacher)
+    //   .get()
+    //   .then((doc) => {
+    //     if (doc.exists) {
+    //       var cls: any = doc.data();
+    //       friends = cls[c.period].map((a: any) => a.name);
+    //     }
+    //   });
+    return friends;
+  }
   var teachers: string[] = ["test", "test2"];
 
   db.collection("Teachers").onSnapshot((snap) => {
@@ -205,19 +201,7 @@ function App() {
     );
   }
 
-<<<<<<< HEAD
-  if (user) {
-    db.collection("Users")
-      .doc(user.uid)
-      .get()
-      .then((doc) => {
-        console.log(doc.data());
-        setFcls(doc.data());
-      });
-  }
-
-=======
-  const topBar = (
+  const TopBar = () => (
     <AppBar position="static">
       <Toolbar>
         <IconButton
@@ -254,15 +238,40 @@ function App() {
   );
 
   if (!user) {
-    return <Signin></Signin>;
+    return (
+      <>
+        <TopBar /> <p> Please log in </p>
+      </>
+    );
   } else if (submittedClasses) {
-    return <MyClasses></MyClasses>;
-  }
->>>>>>> origin/userCheck
-  return (
-    <div>
-      <div className={classes.root}></div>
+    return (
+      <>
+        <TopBar />
+        {submittedClasses &&
+          Object.keys(submittedClasses).map((c: any, i: any) => (
+            <div key={i}>
+              <Card className={classes.root} variant="outlined">
+                <CardContent>
+                  <Typography
+                    className={classes.title}
+                    color="textSecondary"
+                    gutterBottom
+                  ></Typography>
 
+                  <Typography className={classes.pos} color="textSecondary">
+                    {JSON.stringify(submittedClasses[c])}
+                  </Typography>
+                </CardContent>
+              </Card>
+            </div>
+          ))}
+      </>
+    );
+  }
+  return (
+    <div className={classes.root}>
+      <TopBar />
+      {user ? <p>Hi</p> : <p>Bye</p>}
       <div
         style={{
           display: "flex",
@@ -288,31 +297,6 @@ function App() {
           Submit
         </Button>
       </div>
-      <Button variant="contained" color="primary" onClick={test}>
-        test
-      </Button>
-
-      {fCls.map((c: any, i: any) => (
-        <div key={i}>
-          <p>{c.name}</p>
-          <Card className={classes.root} variant="outlined">
-            <CardContent>
-              <Typography
-                className={classes.title}
-                color="textSecondary"
-                gutterBottom
-              >
-                {c.teacher}
-              </Typography>
-
-              <Typography className={classes.pos} color="textSecondary">
-                {/* {getClassmates(c)} */}
-              </Typography>
-            </CardContent>
-          </Card>
-        </div>
-      ))}
-      {/* <p>{JSON.stringify(userClasses)}</p> */}
 
       {/* <p>{JSON.stringify(user)}</p> */}
       <p>{JSON.stringify(cls)}</p>
