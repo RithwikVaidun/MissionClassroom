@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "./App.css";
 import firebase from "firebase";
 import TextField from "@material-ui/core/TextField";
@@ -53,7 +53,32 @@ function App() {
   const db = firebaseApp.firestore();
   const [cls, setCls] = useState<Cls[]>([{ period: "", teacher: "" }]);
   const [user, setUser] = useState<firebase.User | null>(null);
+  const [submittedClasses, setSubmittedClassses] = useState<boolean>(false);
   const classes = useStyles();
+  //useEffect get to get user
+  useEffect(() => {
+    if (firebase.auth().currentUser) {
+      setUser(firebase.auth().currentUser);
+    } else {
+      setUser(null);
+    }
+  }, []);
+  useEffect(() => {
+    if (user) {
+      db.collection("Users")
+        .doc(user.uid)
+        .get()
+        .then((snapshot) => {
+          if (snapshot.exists) {
+            setSubmittedClassses(true);
+          }
+        });
+    }
+  }, [user]);
+  // useEffect(async () => {
+  //   if (user) {
+
+  // }, [user]);
 
   function writetoFirebase(e: any) {
     if (!user) return;
@@ -174,44 +199,50 @@ function App() {
     );
   }
 
+  const topBar = (
+    <AppBar position="static">
+      <Toolbar>
+        <IconButton
+          edge="start"
+          className={classes.menuButton}
+          color="inherit"
+          aria-label="menu"
+        >
+          <MenuIcon />
+        </IconButton>
+        <Typography variant="h6" className={classes.title}>
+          Mission Classroom
+        </Typography>
+        {!user ? (
+          <Button
+            onClick={() => {
+              const googleAuthProvider = new firebase.auth.GoogleAuthProvider();
+              firebase.auth().signInWithRedirect(googleAuthProvider);
+            }}
+          >
+            Login
+          </Button>
+        ) : (
+          <Button
+            onClick={() => {
+              firebase.auth().signOut();
+            }}
+          >
+            Logout
+          </Button>
+        )}
+      </Toolbar>
+    </AppBar>
+  );
+
+  if (!user) {
+    return <Signin></Signin>;
+  } else if (submittedClasses) {
+    return <MyClasses></MyClasses>;
+  }
   return (
     <div>
-      <div className={classes.root}>
-        <AppBar position="static">
-          <Toolbar>
-            <IconButton
-              edge="start"
-              className={classes.menuButton}
-              color="inherit"
-              aria-label="menu"
-            >
-              <MenuIcon />
-            </IconButton>
-            <Typography variant="h6" className={classes.title}>
-              Mission Classroom
-            </Typography>
-            {!user ? (
-              <Button
-                onClick={() => {
-                  const googleAuthProvider =
-                    new firebase.auth.GoogleAuthProvider();
-                  firebase.auth().signInWithRedirect(googleAuthProvider);
-                }}
-              >
-                Login
-              </Button>
-            ) : (
-              <Button
-                onClick={() => {
-                  firebase.auth().signOut();
-                }}
-              >
-                Logout
-              </Button>
-            )}
-          </Toolbar>
-        </AppBar>
-      </div>
+      <div className={classes.root}></div>
 
       <div
         style={{
