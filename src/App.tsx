@@ -16,7 +16,6 @@ import MenuItem from "@material-ui/core/MenuItem";
 import Select from "@material-ui/core/Select";
 import Autocomplete from "@material-ui/lab/Autocomplete";
 import Card from "@material-ui/core/Card";
-import CardActions from "@material-ui/core/CardActions";
 import CardContent from "@material-ui/core/CardContent";
 
 interface Cls {
@@ -52,7 +51,10 @@ function App() {
   const firebaseApp = firebase.apps[0];
   const db = firebaseApp.firestore();
   const [cls, setCls] = useState<Cls[]>([{ period: "", teacher: "" }]);
+  const [fCls, setFcls] = useState<any>(null);
   const [user, setUser] = useState<firebase.User | null>(null);
+  // const [cls, setCls] = useState<Cls[]>([{ period: "", teacher: "" }]);
+
   const classes = useStyles();
 
   function writetoFirebase(e: any) {
@@ -62,7 +64,7 @@ function App() {
     db.collection("Users").doc(user.uid).set(demo);
 
     var batch = db.batch();
-    cls.forEach((c, i, a) => {
+    cls.forEach((c: Cls, i: number, a: Cls[]) => {
       var periods: any = {};
       var docRef = db.collection("Teachers").doc(c.teacher);
       docRef.get().then((doc) => {
@@ -89,21 +91,22 @@ function App() {
   }
 
   function test() {
-    return "ji";
+    // console.log(userClasses);
   }
-  function getClassmates(c: any) {
-    var friends: any = [];
-    // db.collection("Teachers")
-    //   .doc(c.teacher)
-    //   .get()
-    //   .then((doc) => {
-    //     if (doc.exists) {
-    //       var cls: any = doc.data();
-    //       friends = cls[c.period].map((a: any) => a.name);
-    //     }
-    //   });
-    return friends;
-  }
+  // function getClassmates(c: any) {
+  //   var friends: any = [];
+  //   db.collection("Teachers")
+  //     .doc(c.teacher)
+  //     .get()
+  //     .then((doc) => {
+  //       if (doc.exists) {
+  //         var cls: any = doc.data();
+  //         friends = cls[c.period].map((a: any) => a.name);
+  //       }
+  //     });
+  //   console.log(friends);
+  //   return friends;
+  // }
   var teachers: string[] = ["test", "test2"];
 
   db.collection("Teachers").onSnapshot((snap) => {
@@ -174,6 +177,16 @@ function App() {
     );
   }
 
+  if (user) {
+    db.collection("Users")
+      .doc(user.uid)
+      .get()
+      .then((doc) => {
+        console.log(doc.data());
+        setFcls(doc.data());
+      });
+  }
+
   return (
     <div>
       <div className={classes.root}>
@@ -238,9 +251,13 @@ function App() {
           Submit
         </Button>
       </div>
+      <Button variant="contained" color="primary" onClick={test}>
+        test
+      </Button>
 
-      {cls.map((c: any, i) => (
+      {fCls.map((c: any, i: any) => (
         <div key={i}>
+          <p>{c.name}</p>
           <Card className={classes.root} variant="outlined">
             <CardContent>
               <Typography
@@ -252,12 +269,13 @@ function App() {
               </Typography>
 
               <Typography className={classes.pos} color="textSecondary">
-                {getClassmates(c)}
+                {/* {getClassmates(c)} */}
               </Typography>
             </CardContent>
           </Card>
         </div>
       ))}
+      {/* <p>{JSON.stringify(userClasses)}</p> */}
 
       {/* <p>{JSON.stringify(user)}</p> */}
       <p>{JSON.stringify(cls)}</p>

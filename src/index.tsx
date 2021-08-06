@@ -20,12 +20,12 @@ var firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 
 ReactDOM.render(
-  <React.StrictMode>
+  <React.Fragment>
     <Router>
       <Route exact path="/" component={App} />
       <Route exact path="/signin" component={SignIn} />
     </Router>
-  </React.StrictMode>,
+  </React.Fragment>,
   document.getElementById("root")
 );
 
