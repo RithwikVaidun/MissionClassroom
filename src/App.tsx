@@ -16,7 +16,6 @@ import MenuItem from "@material-ui/core/MenuItem";
 import Select from "@material-ui/core/Select";
 import Autocomplete from "@material-ui/lab/Autocomplete";
 import Card from "@material-ui/core/Card";
-import CardActions from "@material-ui/core/CardActions";
 import CardContent from "@material-ui/core/CardContent";
 // import SignIn from "./SignIn";
 // import MyClasses from "./MyClasses";
@@ -55,6 +54,8 @@ function App() {
   const [cls, setCls] = useState<Cls[]>([{ period: "", teacher: "" }]);
   const [user, setUser] = useState<firebase.User | null>(null);
   const [submittedClasses, setSubmittedClassses] = useState<any>(null);
+  const [classmates, setClassmates] = useState<any>(null);
+
   const classes = useStyles();
   //useEffect get to get user
   useEffect(() => {
@@ -72,11 +73,27 @@ function App() {
         .get()
         .then((snapshot) => {
           if (snapshot.exists) {
-            setSubmittedClassses(snapshot.data());
+            let v: any = snapshot.data();
+            delete v.name;
+            setSubmittedClassses(v);
           }
         });
     }
   }, [user]);
+  useEffect(() => {
+    // if (submittedClasses) {
+    //   db.collection("Teachers")
+    //   .doc(c.teacher)
+    //   .get()
+    //   .then((doc) => {
+    //     if (doc.exists) {
+    //       var cls: any = doc.data();
+    //       var friends = cls[c.period].map((a: any) => a.name);
+    //       setClassmates(friends);
+    //     }
+    //   });
+    // }
+  }, [submittedClasses]);
   // useEffect(async () => {
   //   if (user) {
 
@@ -110,7 +127,7 @@ function App() {
           periods[c.period] = [{ name: user.displayName, id: user.uid }];
           batch.set(docRef, periods);
         }
-        if (i == a.length - 1) batch.commit();
+        if (i === a.length - 1) batch.commit();
       });
     });
   }
@@ -120,15 +137,18 @@ function App() {
   }
   function getClassmates(c: any) {
     var friends: any = [];
-    // db.collection("Teachers")
-    //   .doc(c.teacher)
-    //   .get()
-    //   .then((doc) => {
-    //     if (doc.exists) {
-    //       var cls: any = doc.data();
-    //       friends = cls[c.period].map((a: any) => a.name);
-    //     }
-    //   });
+    db.collection("Teachers")
+      .doc(c.teacher)
+      .get()
+      .then((doc) => {
+        if (doc.exists) {
+          var cls: any = doc.data();
+          friends = cls[c.period].map((a: any) => a.name);
+          setClassmates(friends);
+        }
+      });
+    console.log(friends);
+
     return friends;
   }
   var teachers: string[] = ["test", "test2"];
@@ -141,6 +161,7 @@ function App() {
 
   firebase.auth().onAuthStateChanged(function (user) {
     if (user) {
+      //&& user.email?.includes("@fusdk12.net")
       setUser(user);
       // User is signed in.
     } else {
@@ -240,7 +261,7 @@ function App() {
   if (!user) {
     return (
       <>
-        <TopBar /> <p> Please log in </p>
+        <TopBar /> <h1> Please log in with your school account</h1>
       </>
     );
   } else if (submittedClasses) {
@@ -256,10 +277,13 @@ function App() {
                     className={classes.title}
                     color="textSecondary"
                     gutterBottom
-                  ></Typography>
-
+                  >
+                    {submittedClasses[c].teacher}
+                  </Typography>
+                  Classmates
                   <Typography className={classes.pos} color="textSecondary">
-                    {JSON.stringify(submittedClasses[c])}
+                    {/* {JSON.stringify(getClassmates(submittedClasses[c]))} */}
+                    {classmates}
                   </Typography>
                 </CardContent>
               </Card>
@@ -271,7 +295,6 @@ function App() {
   return (
     <div className={classes.root}>
       <TopBar />
-      {user ? <p>Hi</p> : <p>Bye</p>}
       <div
         style={{
           display: "flex",
