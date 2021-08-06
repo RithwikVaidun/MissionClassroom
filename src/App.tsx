@@ -15,6 +15,9 @@ import InputLabel from "@material-ui/core/InputLabel";
 import MenuItem from "@material-ui/core/MenuItem";
 import Select from "@material-ui/core/Select";
 import Autocomplete from "@material-ui/lab/Autocomplete";
+import Card from "@material-ui/core/Card";
+import CardActions from "@material-ui/core/CardActions";
+import CardContent from "@material-ui/core/CardContent";
 
 interface Cls {
   period: string;
@@ -39,6 +42,9 @@ const useStyles = makeStyles((theme: Theme) =>
     selectEmpty: {
       marginTop: theme.spacing(2),
     },
+    pos: {
+      marginBottom: 12,
+    },
   })
 );
 
@@ -51,54 +57,60 @@ function App() {
 
   function writetoFirebase(e: any) {
     if (!user) return;
-    for (var c of cls) {
+    var demo: any = Object.assign({}, cls);
+    demo.name = user.displayName;
+    db.collection("Users").doc(user.uid).set(demo);
+
+    var batch = db.batch();
+    cls.forEach((c, i, a) => {
       var periods: any = {};
-      if (c !== undefined) {
-        db.collection("Teachers")
-          .doc(c.teacher)
-          .get()
-          .then((doc) => {
-            if (doc.exists) {
-              periods = doc.data();
-              if (periods[c.period]) {
-                periods[c.period].push({
-                  name: user.displayName,
-                  id: user.uid,
-                });
-              } else {
-                console.log("period does not exist");
-                periods[c.period] = [{ name: user.displayName, id: user.uid }];
-              }
-              db.collection("Teachers")
-                .doc(c.teacher)
-                .update(periods, { merge: true });
-            } else {
-              console.log("does not exist");
-              periods[c.period] = [{ name: user.displayName, id: user.uid }];
-              db.collection("Teachers")
-                .doc(c.teacher)
-                .set(periods)
-                .then(() => {
-                  console.log("Document successfully written!");
-                })
-                .catch((error) => {
-                  console.error("Error writing document: ", error);
-                });
-            }
-          });
-        // .then(() => {});
-      }
-    }
+      var docRef = db.collection("Teachers").doc(c.teacher);
+      docRef.get().then((doc) => {
+        if (doc.exists) {
+          //update classes
+          periods = doc.data();
+          if (periods[c.period]) {
+            periods[c.period].push({
+              name: user.displayName,
+              id: user.uid,
+            });
+          } else {
+            periods[c.period] = [{ name: user.displayName, id: user.uid }];
+          }
+          batch.set(docRef, periods);
+        } else {
+          console.log("does not exist");
+          periods[c.period] = [{ name: user.displayName, id: user.uid }];
+          batch.set(docRef, periods);
+        }
+        if (i == a.length - 1) batch.commit();
+      });
+    });
   }
 
-  function test() {}
+  function test() {
+    return "ji";
+  }
+  function getClassmates(c: any) {
+    var friends: any = [];
+    // db.collection("Teachers")
+    //   .doc(c.teacher)
+    //   .get()
+    //   .then((doc) => {
+    //     if (doc.exists) {
+    //       var cls: any = doc.data();
+    //       friends = cls[c.period].map((a: any) => a.name);
+    //     }
+    //   });
+    return friends;
+  }
   var teachers: string[] = ["test", "test2"];
 
-  // db.collection("Teachers")
-  //   .doc("Teachers")
-  //   .onSnapshot((doc) => {
-  //     teachers = doc.data().teachers;
-  //   });
+  db.collection("Teachers").onSnapshot((snap) => {
+    snap.forEach((doc) => {
+      teachers.push(doc.id);
+    });
+  });
 
   firebase.auth().onAuthStateChanged(function (user) {
     if (user) {
@@ -161,6 +173,7 @@ function App() {
       </>
     );
   }
+
   return (
     <div>
       <div className={classes.root}>
@@ -225,6 +238,26 @@ function App() {
           Submit
         </Button>
       </div>
+
+      {cls.map((c: any, i) => (
+        <div key={i}>
+          <Card className={classes.root} variant="outlined">
+            <CardContent>
+              <Typography
+                className={classes.title}
+                color="textSecondary"
+                gutterBottom
+              >
+                {c.teacher}
+              </Typography>
+
+              <Typography className={classes.pos} color="textSecondary">
+                {getClassmates(c)}
+              </Typography>
+            </CardContent>
+          </Card>
+        </div>
+      ))}
 
       {/* <p>{JSON.stringify(user)}</p> */}
       <p>{JSON.stringify(cls)}</p>
