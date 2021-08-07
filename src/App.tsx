@@ -21,13 +21,15 @@ import Box from "@material-ui/core/Box";
 import Paper from "@material-ui/core/Paper";
 import Grid from "@material-ui/core/Grid";
 import Avatar from "@material-ui/core/Avatar";
-
+import MyClasses from "./MyClasses";
+import {
+  Cls,
+  FirebaseUsersCollection,
+  FirebaseClassesCollection,
+  FirebaseTeachersClassesDic,
+} from "./MyInterfaces";
 // import SignIn from "./SignIn";
 // import MyClasses from "./MyClasses";
-interface Cls {
-  period: string;
-  teacher: string;
-}
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
@@ -63,10 +65,14 @@ const useStyles = makeStyles((theme: Theme) =>
 function App() {
   const firebaseApp = firebase.apps[0];
   const db = firebaseApp.firestore();
-  const [cls, setCls] = useState<Cls[]>([{ period: "", teacher: "" }]);
+  const [cls, setCls] = useState<Cls[] | null>(null);
   const [user, setUser] = useState<firebase.User | null>(null);
-  const [firebaseUserInfo, setFirebaseUserInfo] = useState<any>(null);
-  const [classmates, setClassmates] = useState<any>(null);
+  const [firebaseUserInfo, setFirebaseUserInfo] =
+    useState<FirebaseUsersCollection | null>(null);
+  const [classmates, setClassmates] = useState<
+    FirebaseClassesCollection[] | null
+  >(null);
+  const [editMode, setEditMode] = useState(false);
 
   const classes = useStyles();
   useEffect(() => {
@@ -84,7 +90,7 @@ function App() {
         .get()
         .then((snapshot) => {
           if (snapshot.exists) {
-            setFirebaseUserInfo(snapshot.data());
+            setFirebaseUserInfo(snapshot.data() as FirebaseUsersCollection);
           }
         });
     }
@@ -102,7 +108,7 @@ function App() {
         .get()
         .then((snapshot) => {
           let allClassmates = snapshot.docs.map((doc) => {
-            return doc.data();
+            return doc.data() as FirebaseClassesCollection;
           });
           // snapshot.forEach((doc) => {
           //   console.log("doc", doc.data());
@@ -116,17 +122,19 @@ function App() {
     }
   }, [firebaseUserInfo]);
 
-  function writetoFirebase(e: any) {
+  function writetoFirebase() {
     if (!user) return;
     var batch = db.batch();
     let userRef = db.collection("Users").doc(user.uid);
-    let userInfo: any = { name: user.displayName, classes: {} };
-    let asdfasd: any = {};
-    console.log(asdfasd, "asdfasd outside");
-    userInfo.classes = asdfasd;
+    if (!user.displayName) user.displayName = "hi";
+    let userInfo: FirebaseUsersCollection = {
+      name: user.displayName,
+      classes: {},
+    };
     // batch.set(userRef, userInfo);
+    if (!cls) return;
     cls.forEach((c, i, a) => {
-      userInfo.classes[c.period] = c;
+      userInfo.classes[c.period] = { ...c, id: "none" };
       console.log(userInfo, "userInfo inside");
       var teacherRef = db.collection("Teachers").doc(c.teacher);
       teacherRef.get().then((teadoc) => {
@@ -144,8 +152,9 @@ function App() {
           });
 
           // Create the new teacher and set the batch
-          let hi: any = {};
+          let hi: FirebaseTeachersClassesDic = {};
           hi[c.period] = newclass.id;
+          // hi[1] = "hi";
           batch.set(teacherRef, {
             classes: hi,
             name: c.teacher,
@@ -200,6 +209,9 @@ function App() {
     });
   }
 
+  const editClasses = () => {
+    setEditMode(true);
+  };
   var teachers: string[] = [];
 
   db.collection("Teachers").onSnapshot((snap) => {
@@ -230,10 +242,13 @@ function App() {
             style={{ minWidth: 120 }}
             label="Period"
             defaultValue=""
-            onChange={(e: any) => {
-              let newArr = [...cls];
-              newArr[i] = { ...newArr[i], period: e.target.value };
+            onChange={(e: React.ChangeEvent<{ value: unknown }>) => {
+              let newArr: Cls[] = [...(cls ?? [])];
+              newArr[i] = { ...newArr[i], period: e.target.value as number };
               setCls(newArr);
+              // if (e.target.value) {
+              // setCls([...cls, { period: e.target.value }]);
+              // }
             }}
           >
             <MenuItem value={1}>1</MenuItem>
@@ -249,17 +264,21 @@ function App() {
             options={teachers}
             style={{ width: 130 }}
             debug
-            onChange={(e, value: any) => {
-              let newArr = [...cls];
-              newArr[i] = { ...newArr[i], teacher: value };
-              setCls(newArr);
+            onChange={(e, value: string | null) => {
+              let newArr: Cls[] = [...(cls ?? [])];
+              if (value) {
+                newArr[i] = { ...newArr[i], teacher: value };
+              }
+              if (newArr)
+                // newArr[i] = { ...newArr[i], teacher: value };
+                setCls(newArr);
             }}
             renderInput={(params) => (
               <TextField
                 {...params}
                 label="Teacher"
-                onChange={(e: any) => {
-                  let newArr = [...cls];
+                onChange={(e) => {
+                  let newArr: Cls[] = [...(cls ?? [])];
                   newArr[i] = { ...newArr[i], teacher: e.target.value };
                   setCls(newArr);
                 }}
@@ -306,13 +325,6 @@ function App() {
       </Toolbar>
     </AppBar>
   );
-  const defaultProps = {
-    bgcolor: "background.paper",
-    borderColor: "text.primary",
-    m: 1,
-    border: 1,
-    style: { width: "15rem", height: "3rem" },
-  };
 
   if (!user) {
     return (
@@ -320,50 +332,13 @@ function App() {
         <TopBar /> <h1> Please log in with your school account</h1>
       </>
     );
+  } else if (editMode) {
   } else if (firebaseUserInfo) {
     return (
       <>
         <TopBar />
-        {classmates &&
-          classmates.map((c: any, i: any) => (
-            <div key={i}>
-              <Card variant="outlined">
-                <CardContent>
-                  <h2>
-                    {c.teacher} Period {c.period}
-                  </h2>
-                  <div
-                    style={{
-                      display: "flex",
-                      justifyContent: "center",
-                      alignItems: "center",
-                    }}
-                  >
-                    <h2>
-                      <u>Classmates</u>
-                    </h2>
-                  </div>
-
-                  {/* <Typography className={classes.pos} color="textSecondary"> */}
-                  {c.students.map((s: any, j: any) => (
-                    <div>
-                      <Paper className={classes.paper}>
-                        <Grid container wrap="nowrap" spacing={2}>
-                          <Grid item>
-                            <Avatar src={s.photo}></Avatar>
-                          </Grid>
-                          <Grid item xs zeroMinWidth>
-                            <Typography noWrap>{s.name}</Typography>
-                          </Grid>
-                        </Grid>
-                      </Paper>
-                    </div>
-                  ))}
-                  {/* </Typography> */}
-                </CardContent>
-              </Card>
-            </div>
-          ))}
+        <br />
+        <MyClasses classmates={classmates} editClass={editClasses} />
       </>
     );
   }
