@@ -17,6 +17,11 @@ import Select from "@material-ui/core/Select";
 import Autocomplete from "@material-ui/lab/Autocomplete";
 import Card from "@material-ui/core/Card";
 import CardContent from "@material-ui/core/CardContent";
+import Box from "@material-ui/core/Box";
+import Paper from "@material-ui/core/Paper";
+import Grid from "@material-ui/core/Grid";
+import Avatar from "@material-ui/core/Avatar";
+
 // import SignIn from "./SignIn";
 // import MyClasses from "./MyClasses";
 interface Cls {
@@ -28,6 +33,8 @@ const useStyles = makeStyles((theme: Theme) =>
   createStyles({
     root: {
       flexGrow: 1,
+      overflow: "hidden",
+      padding: theme.spacing(0, 3),
     },
     menuButton: {
       marginRight: theme.spacing(2),
@@ -44,6 +51,11 @@ const useStyles = makeStyles((theme: Theme) =>
     },
     pos: {
       marginBottom: 12,
+    },
+    paper: {
+      maxWidth: 400,
+      margin: `${theme.spacing(1)}px auto`,
+      padding: theme.spacing(2),
     },
   })
 );
@@ -126,7 +138,9 @@ function App() {
           batch.set(newclass, {
             period: c.period,
             teacher: c.teacher,
-            students: [{ name: user.displayName, id: user.uid }],
+            students: [
+              { name: user.displayName, id: user.uid, photo: user.photoURL },
+            ],
           });
 
           // Create the new teacher and set the batch
@@ -157,6 +171,7 @@ function App() {
               students: firebase.firestore.FieldValue.arrayUnion({
                 name: user.displayName,
                 id: user.uid,
+                photo: user.photoURL,
               }),
             });
           } else {
@@ -164,13 +179,10 @@ function App() {
             batch.set(classRef, {
               period: c.period,
               teacher: c.teacher,
-              students: [{ name: user.displayName, id: user.uid }],
+              students: [
+                { name: user.displayName, id: user.uid, photo: user.photoURL },
+              ],
             });
-            // classRef.set({
-            //   period: c.period,
-            //   teacher: c.teacher,
-            //   students: [{ name: user.displayName, id: user.uid }],
-            // });
           }
           // Add the student into the class
           userInfo.classes[c.period] = {
@@ -187,23 +199,8 @@ function App() {
       });
     });
   }
-  // function getClassmates(c: any) {
-  //   var friends: any = [];
-  //   db.collection("Teachers")
-  //     .doc(c.teacher)
-  //     .get()
-  //     .then((doc) => {
-  //       if (doc.exists) {
-  //         var cls: any = doc.data();
-  //         friends = cls[c.period].map((a: any) => a.name);
-  //         setClassmates(friends);
-  //       }
-  //     });
-  //   console.log(friends);
 
-  //   return friends;
-  // }
-  var teachers: string[] = ["test", "test2"];
+  var teachers: string[] = [];
 
   db.collection("Teachers").onSnapshot((snap) => {
     snap.forEach((doc) => {
@@ -309,6 +306,13 @@ function App() {
       </Toolbar>
     </AppBar>
   );
+  const defaultProps = {
+    bgcolor: "background.paper",
+    borderColor: "text.primary",
+    m: 1,
+    border: 1,
+    style: { width: "15rem", height: "3rem" },
+  };
 
   if (!user) {
     return (
@@ -325,17 +329,37 @@ function App() {
             <div key={i}>
               <Card variant="outlined">
                 <CardContent>
-                  <Typography
-                    className={classes.title}
-                    color="textSecondary"
-                    gutterBottom
+                  <h2>
+                    {c.teacher} Period {c.period}
+                  </h2>
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "center",
+                      alignItems: "center",
+                    }}
                   >
-                    {c.teacher}
-                  </Typography>
-                  Classmates
-                  <Typography className={classes.pos} color="textSecondary">
-                    {c.students.map((s: any) => s.name)}
-                  </Typography>
+                    <h2>
+                      <u>Classmates</u>
+                    </h2>
+                  </div>
+
+                  {/* <Typography className={classes.pos} color="textSecondary"> */}
+                  {c.students.map((s: any, j: any) => (
+                    <div>
+                      <Paper className={classes.paper}>
+                        <Grid container wrap="nowrap" spacing={2}>
+                          <Grid item>
+                            <Avatar src={s.photo}></Avatar>
+                          </Grid>
+                          <Grid item xs zeroMinWidth>
+                            <Typography noWrap>{s.name}</Typography>
+                          </Grid>
+                        </Grid>
+                      </Paper>
+                    </div>
+                  ))}
+                  {/* </Typography> */}
                 </CardContent>
               </Card>
             </div>
@@ -373,7 +397,7 @@ function App() {
       </div>
 
       {/* <p>{JSON.stringify(user)}</p> */}
-      <p>{JSON.stringify(cls)}</p>
+      {/* <p>{JSON.stringify(cls)}</p> */}
     </div>
   );
 }
