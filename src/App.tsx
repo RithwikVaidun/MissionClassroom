@@ -53,11 +53,10 @@ function App() {
   const db = firebaseApp.firestore();
   const [cls, setCls] = useState<Cls[]>([{ period: "", teacher: "" }]);
   const [user, setUser] = useState<firebase.User | null>(null);
-  const [submittedClasses, setSubmittedClassses] = useState<any>(null);
+  const [firebaseUserInfo, setFirebaseUserInfo] = useState<any>(null);
   const [classmates, setClassmates] = useState<any>(null);
 
   const classes = useStyles();
-  //useEffect get to get user
   useEffect(() => {
     if (firebase.auth().currentUser) {
       setUser(firebase.auth().currentUser);
@@ -73,84 +72,137 @@ function App() {
         .get()
         .then((snapshot) => {
           if (snapshot.exists) {
-            let v: any = snapshot.data();
-            delete v.name;
-            setSubmittedClassses(v);
+            setFirebaseUserInfo(snapshot.data());
           }
         });
     }
   }, [user]);
   useEffect(() => {
-    // if (submittedClasses) {
-    //   db.collection("Teachers")
-    //   .doc(c.teacher)
-    //   .get()
-    //   .then((doc) => {
-    //     if (doc.exists) {
-    //       var cls: any = doc.data();
-    //       var friends = cls[c.period].map((a: any) => a.name);
-    //       setClassmates(friends);
-    //     }
-    //   });
-    // }
-  }, [submittedClasses]);
-  // useEffect(async () => {
-  //   if (user) {
-
-  // }, [user]);
+    if (firebaseUserInfo) {
+      console.log(firebaseUserInfo);
+      let test = Object.keys(firebaseUserInfo.classes).map((x, i) => {
+        return firebaseUserInfo.classes[x].id;
+      });
+      console.log("test", test);
+      let ref = db.collection("Classes");
+      ref
+        .where(firebase.firestore.FieldPath.documentId(), "in", test)
+        .get()
+        .then((snapshot) => {
+          let allClassmates = snapshot.docs.map((doc) => {
+            return doc.data();
+          });
+          // snapshot.forEach((doc) => {
+          //   console.log("doc", doc.data());
+          // });
+          console.log(allClassmates, "ac");
+          setClassmates(allClassmates);
+        })
+        .catch((error) => {
+          console.log("error", error);
+        });
+    }
+  }, [firebaseUserInfo]);
 
   function writetoFirebase(e: any) {
     if (!user) return;
-    var demo: any = Object.assign({}, cls);
-    demo.name = user.displayName;
-    db.collection("Users").doc(user.uid).set(demo);
-
     var batch = db.batch();
+    let userRef = db.collection("Users").doc(user.uid);
+    let userInfo: any = { name: user.displayName, classes: {} };
+    let asdfasd: any = {};
+    console.log(asdfasd, "asdfasd outside");
+    userInfo.classes = asdfasd;
+    // batch.set(userRef, userInfo);
     cls.forEach((c, i, a) => {
-      var periods: any = {};
-      var docRef = db.collection("Teachers").doc(c.teacher);
-      docRef.get().then((doc) => {
-        if (doc.exists) {
-          //update classes
-          periods = doc.data();
-          if (periods[c.period]) {
-            periods[c.period].push({
-              name: user.displayName,
-              id: user.uid,
+      userInfo.classes[c.period] = c;
+      console.log(userInfo, "userInfo inside");
+      var teacherRef = db.collection("Teachers").doc(c.teacher);
+      teacherRef.get().then((teadoc) => {
+        if (!teadoc.exists) {
+          // If there is no teacher document then create a teacher and a class
+
+          // Create the new class and set the batch
+          var newclass = db.collection("Classes").doc();
+          batch.set(newclass, {
+            period: c.period,
+            teacher: c.teacher,
+            students: [{ name: user.displayName, id: user.uid }],
+          });
+
+          // Create the new teacher and set the batch
+          let hi: any = {};
+          hi[c.period] = newclass.id;
+          batch.set(teacherRef, {
+            classes: hi,
+            name: c.teacher,
+          });
+          userInfo.classes[c.period] = {
+            ...userInfo.classes[c.period],
+            id: newclass.id,
+          };
+          // batch.update(userRef, userInfo);
+        } else {
+          // There is a teacher
+
+          let teacherInformation = teadoc.data();
+          if (!teacherInformation) return;
+
+          let classRef = db
+            .collection("Classes")
+            .doc(teacherInformation.classes[c.period]);
+
+          if (teacherInformation.classes[c.period]) {
+            // The teacher already has a class so add the student into the class
+            batch.update(classRef, {
+              students: firebase.firestore.FieldValue.arrayUnion({
+                name: user.displayName,
+                id: user.uid,
+              }),
             });
           } else {
-            periods[c.period] = [{ name: user.displayName, id: user.uid }];
+            // The teacher doesn't have a class so create a class
+            batch.set(classRef, {
+              period: c.period,
+              teacher: c.teacher,
+              students: [{ name: user.displayName, id: user.uid }],
+            });
+            // classRef.set({
+            //   period: c.period,
+            //   teacher: c.teacher,
+            //   students: [{ name: user.displayName, id: user.uid }],
+            // });
           }
-          batch.set(docRef, periods);
-        } else {
-          console.log("does not exist");
-          periods[c.period] = [{ name: user.displayName, id: user.uid }];
-          batch.set(docRef, periods);
+          // Add the student into the class
+          userInfo.classes[c.period] = {
+            ...userInfo.classes[c.period],
+            id: classRef.id,
+          };
+          // batch.update(userRef, userInfo);
         }
-        if (i === a.length - 1) batch.commit();
+        if (i === a.length - 1) {
+          // console.log(userInfo, "userInfo");
+          batch.set(userRef, userInfo);
+          batch.commit();
+        }
       });
     });
   }
+  // function getClassmates(c: any) {
+  //   var friends: any = [];
+  //   db.collection("Teachers")
+  //     .doc(c.teacher)
+  //     .get()
+  //     .then((doc) => {
+  //       if (doc.exists) {
+  //         var cls: any = doc.data();
+  //         friends = cls[c.period].map((a: any) => a.name);
+  //         setClassmates(friends);
+  //       }
+  //     });
+  //   console.log(friends);
 
-  function test() {
-    return "ji";
-  }
-  function getClassmates(c: any) {
-    var friends: any = [];
-    db.collection("Teachers")
-      .doc(c.teacher)
-      .get()
-      .then((doc) => {
-        if (doc.exists) {
-          var cls: any = doc.data();
-          friends = cls[c.period].map((a: any) => a.name);
-          setClassmates(friends);
-        }
-      });
-    console.log(friends);
-
-    return friends;
-  }
+  //   return friends;
+  // }
   var teachers: string[] = ["test", "test2"];
 
   db.collection("Teachers").onSnapshot((snap) => {
@@ -264,26 +316,25 @@ function App() {
         <TopBar /> <h1> Please log in with your school account</h1>
       </>
     );
-  } else if (submittedClasses) {
+  } else if (firebaseUserInfo) {
     return (
       <>
         <TopBar />
-        {submittedClasses &&
-          Object.keys(submittedClasses).map((c: any, i: any) => (
+        {classmates &&
+          classmates.map((c: any, i: any) => (
             <div key={i}>
-              <Card className={classes.root} variant="outlined">
+              <Card variant="outlined">
                 <CardContent>
                   <Typography
                     className={classes.title}
                     color="textSecondary"
                     gutterBottom
                   >
-                    {submittedClasses[c].teacher}
+                    {c.teacher}
                   </Typography>
                   Classmates
                   <Typography className={classes.pos} color="textSecondary">
-                    {/* {JSON.stringify(getClassmates(submittedClasses[c]))} */}
-                    {classmates}
+                    {c.students.map((s: any) => s.name)}
                   </Typography>
                 </CardContent>
               </Card>
