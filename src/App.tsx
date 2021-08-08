@@ -31,6 +31,7 @@ import ListItemIcon from "@material-ui/core/ListItemIcon";
 import ListItemText from "@material-ui/core/ListItemText";
 import InboxIcon from "@material-ui/icons/MoveToInbox";
 import MailIcon from "@material-ui/icons/Mail";
+import EnterClasses from "./EnterClasses";
 
 import {
   Cls,
@@ -81,7 +82,7 @@ const useStyles = makeStyles((theme: Theme) =>
 function App() {
   const firebaseApp = firebase.apps[0];
   const db = firebaseApp.firestore();
-  const [cls, setCls] = useState<Cls[] | null>(null);
+
   const [user, setUser] = useState<firebase.User | null>(null);
   const [firebaseUserInfo, setFirebaseUserInfo] =
     useState<FirebaseUsersCollection | null>(null);
@@ -159,7 +160,7 @@ function App() {
     }
   }, [firebaseUserInfo]);
 
-  function writetoFirebase() {
+  function writetoFirebase(cls: Cls[] | null) {
     if (!user) return;
     var batch = db.batch();
     let userRef = db.collection("Users").doc(user.uid);
@@ -171,7 +172,12 @@ function App() {
     // batch.set(userRef, userInfo);
     if (!cls) return;
     cls.forEach((c, i, a) => {
-      userInfo.classes[c.period] = { ...c, id: "none" };
+      if (!c.period) return;
+      userInfo.classes[c.period] = {
+        ...c,
+        id: "none",
+        period: c.period,
+      };
       console.log(userInfo, "userInfo inside");
       var teacherRef = db.collection("Teachers").doc(c.teacher);
       teacherRef.get().then((teadoc) => {
@@ -249,13 +255,6 @@ function App() {
   const editClasses = () => {
     setEditMode(true);
   };
-  var teachers: string[] = [];
-
-  db.collection("Teachers").onSnapshot((snap) => {
-    snap.forEach((doc) => {
-      teachers.push(doc.id);
-    });
-  });
 
   firebase.auth().onAuthStateChanged(function (user) {
     if (user) {
@@ -268,96 +267,38 @@ function App() {
     }
   });
 
-  const items = [];
-  for (var x = 0; x < 6; x++) {
-    let i = x;
-    items.push(
-      <>
-        <div style={{ float: "left" }}>
-          <InputLabel>Period</InputLabel>
-          <Select
-            style={{ minWidth: 120 }}
-            label="Period"
-            defaultValue=""
-            onChange={(e: React.ChangeEvent<{ value: unknown }>) => {
-              let newArr: Cls[] = [...(cls ?? [])];
-              newArr[i] = { ...newArr[i], period: e.target.value as number };
-              setCls(newArr);
-              // if (e.target.value) {
-              // setCls([...cls, { period: e.target.value }]);
-              // }
-            }}
-          >
-            <MenuItem value={1}>1</MenuItem>
-            <MenuItem value={2}>2</MenuItem>
-            <MenuItem value={3}>3</MenuItem>
-            <MenuItem value={4}>4</MenuItem>
-            <MenuItem value={5}>5</MenuItem>
-            <MenuItem value={6}>6</MenuItem>
-          </Select>
-        </div>
-        <div style={{ float: "left" }}>
-          <Autocomplete
-            options={teachers}
-            style={{ width: 130 }}
-            debug
-            onChange={(e, value: string | null) => {
-              let newArr: Cls[] = [...(cls ?? [])];
-              if (value) {
-                newArr[i] = { ...newArr[i], teacher: value };
-              }
-              if (newArr)
-                // newArr[i] = { ...newArr[i], teacher: value };
-                setCls(newArr);
-            }}
-            renderInput={(params) => (
-              <TextField
-                {...params}
-                label="Teacher"
-                onChange={(e) => {
-                  let newArr: Cls[] = [...(cls ?? [])];
-                  newArr[i] = { ...newArr[i], teacher: e.target.value };
-                  setCls(newArr);
-                }}
-              />
-            )}
-          ></Autocomplete>
-        </div>
-      </>
-    );
-  }
-  const list = (anchor: Anchor) => (
-    <div
-      className={clsx(classes.list, {
-        [classes.fullList]: anchor === "top" || anchor === "bottom",
-      })}
-      role="presentation"
-      onClick={toggleDrawer(anchor, false)}
-      onKeyDown={toggleDrawer(anchor, false)}
-    >
-      <List>
-        {
-          <ListItem button href="/signin">
-            <ListItemIcon>
-              <MailIcon />
-            </ListItemIcon>
-            <ListItemText primary={"All Classrooms"} />
-          </ListItem>
-        }
-      </List>
-    </div>
-  );
+  // const list = (anchor: Anchor) => (
+  //   <div
+  //     className={clsx(classes.list, {
+  //       [classes.fullList]: anchor === "top" || anchor === "bottom",
+  //     })}
+  //     role="presentation"
+  //     onClick={toggleDrawer(anchor, false)}
+  //     onKeyDown={toggleDrawer(anchor, false)}
+  //   >
+  //     <List>
+  //       {
+  //         <ListItem button href="/signin">
+  //           <ListItemIcon>
+  //             <MailIcon />
+  //           </ListItemIcon>
+  //           <ListItemText primary={"All Classrooms"} />
+  //         </ListItem>
+  //       }
+  //     </List>
+  //   </div>
+  // );
   const TopBar = () => (
     <AppBar position="static">
       <Toolbar>
-        <IconButton
+        {/* <IconButton
           edge="start"
           className={classes.menuButton}
           color="inherit"
           aria-label="menu"
         >
           <div>
-            {/* href="/signin" */}
+            href="/signin"
             {(["left"] as Anchor[]).map((anchor) => (
               <React.Fragment key={anchor}>
                 <Button onClick={toggleDrawer(anchor, true)}>{anchor}</Button>
@@ -373,7 +314,7 @@ function App() {
             ))}
           </div>
           <MenuIcon />
-        </IconButton>
+        </IconButton> */}
 
         <Typography variant="h6" className={classes.title}>
           Mission Classroom
@@ -399,7 +340,6 @@ function App() {
       </Toolbar>
     </AppBar>
   );
-
   if (!user) {
     return (
       <>
@@ -407,7 +347,13 @@ function App() {
       </>
     );
   } else if (editMode) {
-    // return <p>HI</p>;
+    return (
+      <>
+        <TopBar />
+        <EnterClasses writeToDatabase={writetoFirebase} classes={classmates} />
+      </>
+    );
+    // return <EditClasses />;
   } else if (firebaseUserInfo) {
     return (
       <>
@@ -418,37 +364,15 @@ function App() {
     );
   }
   return (
-    <div className={classes.root}>
+    // <div className={classes.root}>
+    <>
       <TopBar />
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          height: "60vh",
-        }}
-      >
-        <ul>
-          {items.map((reptile, i) => (
-            <div key={i}>{reptile}</div>
-          ))}
-        </ul>
-      </div>
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-        }}
-      >
-        <Button variant="contained" color="primary" onClick={writetoFirebase}>
-          Submit
-        </Button>
-      </div>
+      <EnterClasses writeToDatabase={writetoFirebase} classes={null} />
 
       {/* <p>{JSON.stringify(user)}</p> */}
       {/* <p>{JSON.stringify(cls)}</p> */}
-    </div>
+    </>
+    // </div>
   );
 }
 
