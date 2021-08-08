@@ -22,6 +22,16 @@ import Paper from "@material-ui/core/Paper";
 import Grid from "@material-ui/core/Grid";
 import Avatar from "@material-ui/core/Avatar";
 import MyClasses from "./MyClasses";
+import clsx from "clsx";
+import SwipeableDrawer from "@material-ui/core/SwipeableDrawer";
+import List from "@material-ui/core/List";
+import Divider from "@material-ui/core/Divider";
+import ListItem from "@material-ui/core/ListItem";
+import ListItemIcon from "@material-ui/core/ListItemIcon";
+import ListItemText from "@material-ui/core/ListItemText";
+import InboxIcon from "@material-ui/icons/MoveToInbox";
+import MailIcon from "@material-ui/icons/Mail";
+
 import {
   Cls,
   FirebaseUsersCollection,
@@ -59,6 +69,12 @@ const useStyles = makeStyles((theme: Theme) =>
       margin: `${theme.spacing(1)}px auto`,
       padding: theme.spacing(2),
     },
+    list: {
+      width: 250,
+    },
+    fullList: {
+      width: "auto",
+    },
   })
 );
 
@@ -73,6 +89,27 @@ function App() {
     FirebaseClassesCollection[] | null
   >(null);
   const [editMode, setEditMode] = useState(false);
+
+  const [state, setState] = React.useState({
+    top: false,
+    left: false,
+    bottom: false,
+    right: false,
+  });
+  type Anchor = "top" | "left" | "bottom" | "right";
+  const toggleDrawer =
+    (anchor: Anchor, open: boolean) =>
+    (event: React.KeyboardEvent | React.MouseEvent) => {
+      if (
+        event.type === "keydown" &&
+        ((event as React.KeyboardEvent).key === "Tab" ||
+          (event as React.KeyboardEvent).key === "Shift")
+      ) {
+        return;
+      }
+
+      setState({ ...state, [anchor]: open });
+    };
 
   const classes = useStyles();
   useEffect(() => {
@@ -289,7 +326,27 @@ function App() {
       </>
     );
   }
-
+  const list = (anchor: Anchor) => (
+    <div
+      className={clsx(classes.list, {
+        [classes.fullList]: anchor === "top" || anchor === "bottom",
+      })}
+      role="presentation"
+      onClick={toggleDrawer(anchor, false)}
+      onKeyDown={toggleDrawer(anchor, false)}
+    >
+      <List>
+        {
+          <ListItem button href="/signin">
+            <ListItemIcon>
+              <MailIcon />
+            </ListItemIcon>
+            <ListItemText primary={"All Classrooms"} />
+          </ListItem>
+        }
+      </List>
+    </div>
+  );
   const TopBar = () => (
     <AppBar position="static">
       <Toolbar>
@@ -299,8 +356,25 @@ function App() {
           color="inherit"
           aria-label="menu"
         >
+          <div>
+            {/* href="/signin" */}
+            {(["left"] as Anchor[]).map((anchor) => (
+              <React.Fragment key={anchor}>
+                <Button onClick={toggleDrawer(anchor, true)}>{anchor}</Button>
+                <SwipeableDrawer
+                  anchor={anchor}
+                  open={state[anchor]}
+                  onClose={toggleDrawer(anchor, false)}
+                  onOpen={toggleDrawer(anchor, true)}
+                >
+                  {list(anchor)}
+                </SwipeableDrawer>
+              </React.Fragment>
+            ))}
+          </div>
           <MenuIcon />
         </IconButton>
+
         <Typography variant="h6" className={classes.title}>
           Mission Classroom
         </Typography>
@@ -319,7 +393,7 @@ function App() {
               firebase.auth().signOut();
             }}
           >
-            Logout
+            Logout {user.email}
           </Button>
         )}
       </Toolbar>
@@ -333,6 +407,7 @@ function App() {
       </>
     );
   } else if (editMode) {
+    // return <p>HI</p>;
   } else if (firebaseUserInfo) {
     return (
       <>
