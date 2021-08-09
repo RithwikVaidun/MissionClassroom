@@ -22,6 +22,16 @@ import Paper from "@material-ui/core/Paper";
 import Grid from "@material-ui/core/Grid";
 import Avatar from "@material-ui/core/Avatar";
 import MyClasses from "./MyClasses";
+import clsx from "clsx";
+import SwipeableDrawer from "@material-ui/core/SwipeableDrawer";
+import List from "@material-ui/core/List";
+import Divider from "@material-ui/core/Divider";
+import ListItem from "@material-ui/core/ListItem";
+import ListItemIcon from "@material-ui/core/ListItemIcon";
+import ListItemText from "@material-ui/core/ListItemText";
+import InboxIcon from "@material-ui/icons/MoveToInbox";
+import MailIcon from "@material-ui/icons/Mail";
+
 import {
   Cls,
   FirebaseUsersCollection,
@@ -59,13 +69,19 @@ const useStyles = makeStyles((theme: Theme) =>
       margin: `${theme.spacing(1)}px auto`,
       padding: theme.spacing(2),
     },
+    list: {
+      width: 250,
+    },
+    fullList: {
+      width: "auto",
+    },
   })
 );
 
 function App() {
   const firebaseApp = firebase.apps[0];
   const db = firebaseApp.firestore();
-
+  const [cls, setCls] = useState<Cls[] | null>(null);
   const [user, setUser] = useState<firebase.User | null>(null);
   const [firebaseUserInfo, setFirebaseUserInfo] =
     useState<FirebaseUsersCollection | null>(null);
@@ -73,6 +89,27 @@ function App() {
     FirebaseClassesCollection[] | null
   >(null);
   const [editMode, setEditMode] = useState(false);
+
+  const [state, setState] = React.useState({
+    top: false,
+    left: false,
+    bottom: false,
+    right: false,
+  });
+  type Anchor = "top" | "left" | "bottom" | "right";
+  const toggleDrawer =
+    (anchor: Anchor, open: boolean) =>
+    (event: React.KeyboardEvent | React.MouseEvent) => {
+      if (
+        event.type === "keydown" &&
+        ((event as React.KeyboardEvent).key === "Tab" ||
+          (event as React.KeyboardEvent).key === "Shift")
+      ) {
+        return;
+      }
+
+      setState({ ...state, [anchor]: open });
+    };
 
   const classes = useStyles();
   useEffect(() => {
@@ -122,7 +159,7 @@ function App() {
     }
   }, [firebaseUserInfo]);
 
-  function writetoFirebase(cls: Cls[] | null) {
+  function writetoFirebase() {
     if (!user) return;
     var batch = db.batch();
     let userRef = db.collection("Users").doc(user.uid);
@@ -134,12 +171,7 @@ function App() {
     // batch.set(userRef, userInfo);
     if (!cls) return;
     cls.forEach((c, i, a) => {
-      if (!c.period) return;
-      userInfo.classes[c.period] = {
-        ...c,
-        id: "none",
-        period: c.period,
-      };
+      userInfo.classes[c.period] = { ...c, id: "none" };
       console.log(userInfo, "userInfo inside");
       var teacherRef = db.collection("Teachers").doc(c.teacher);
       teacherRef.get().then((teadoc) => {
@@ -217,6 +249,13 @@ function App() {
   const editClasses = () => {
     setEditMode(true);
   };
+  var teachers: string[] = [];
+
+  db.collection("Teachers").onSnapshot((snap) => {
+    snap.forEach((doc) => {
+      teachers.push(doc.id);
+    });
+  });
 
   firebase.auth().onAuthStateChanged(function (user) {
     if (user) {
@@ -287,18 +326,55 @@ function App() {
       </>
     );
   }
-
+  const list = (anchor: Anchor) => (
+    <div
+      className={clsx(classes.list, {
+        [classes.fullList]: anchor === "top" || anchor === "bottom",
+      })}
+      role="presentation"
+      onClick={toggleDrawer(anchor, false)}
+      onKeyDown={toggleDrawer(anchor, false)}
+    >
+      <List>
+        {
+          <ListItem button href="/signin">
+            <ListItemIcon>
+              <MailIcon />
+            </ListItemIcon>
+            <ListItemText primary={"All Classrooms"} />
+          </ListItem>
+        }
+      </List>
+    </div>
+  );
   const TopBar = () => (
     <AppBar position="static">
       <Toolbar>
-        {/* <IconButton
+        <IconButton
           edge="start"
           className={classes.menuButton}
           color="inherit"
           aria-label="menu"
         >
+          <div>
+            {/* href="/signin" */}
+            {(["left"] as Anchor[]).map((anchor) => (
+              <React.Fragment key={anchor}>
+                <Button onClick={toggleDrawer(anchor, true)}>{anchor}</Button>
+                <SwipeableDrawer
+                  anchor={anchor}
+                  open={state[anchor]}
+                  onClose={toggleDrawer(anchor, false)}
+                  onOpen={toggleDrawer(anchor, true)}
+                >
+                  {list(anchor)}
+                </SwipeableDrawer>
+              </React.Fragment>
+            ))}
+          </div>
           <MenuIcon />
         </IconButton>
+
         <Typography variant="h6" className={classes.title}>
           Mission Classroom
         </Typography>
@@ -317,12 +393,13 @@ function App() {
               firebase.auth().signOut();
             }}
           >
-            Logout
+            Logout {user.email}
           </Button>
         )}
       </Toolbar>
     </AppBar>
   );
+
   if (!user) {
     return (
       <>
@@ -330,6 +407,7 @@ function App() {
       </>
     );
   } else if (editMode) {
+    // return <p>HI</p>;
   } else if (firebaseUserInfo) {
     return (
       <>
@@ -340,15 +418,37 @@ function App() {
     );
   }
   return (
-    // <div className={classes.root}>
-    <>
+    <div className={classes.root}>
       <TopBar />
-      <EnterClasses writeToDatabase={writetoFirebase} classes={null} />
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          height: "60vh",
+        }}
+      >
+        <ul>
+          {items.map((reptile, i) => (
+            <div key={i}>{reptile}</div>
+          ))}
+        </ul>
+      </div>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
+        <Button variant="contained" color="primary" onClick={writetoFirebase}>
+          Submit
+        </Button>
+      </div>
 
       {/* <p>{JSON.stringify(user)}</p> */}
       {/* <p>{JSON.stringify(cls)}</p> */}
-    </>
-    // </div>
+    </div>
   );
 }
 
