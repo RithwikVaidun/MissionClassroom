@@ -8,24 +8,24 @@ import SignIn from "./SignIn";
 
 import { BrowserRouter as Router, Switch, Route, Link } from "react-router-dom";
 
-// var firebaseConfig = {
-//   apiKey: "AIzaSyDWZVyOM16RflypWWXcC1Hu2R-a1e50glY",
-//   authDomain: "fridge-ba431.firebaseapp.com",
-//   projectId: "fridge-ba431",
-//   storageBucket: "fridge-ba431.appspot.com",
-//   messagingSenderId: "748800175843",
-//   appId: "1:748800175843:web:3022c69d44f06654b39fd6",
-//   measurementId: "G-2EWECPPD9P",
-// };
 var firebaseConfig = {
-  apiKey: "AIzaSyBf18UDGBhG0xoiyE0HkHRjL1Dm6DgSeFM",
-  authDomain: "mission-class.firebaseapp.com",
-  projectId: "mission-class",
-  storageBucket: "mission-class.appspot.com",
-  messagingSenderId: "525018390258",
-  appId: "1:525018390258:web:d37f5dfe4dc61acefaba6b",
-  measurementId: "G-CDQKK7T6FR",
+  apiKey: "AIzaSyDWZVyOM16RflypWWXcC1Hu2R-a1e50glY",
+  authDomain: "fridge-ba431.firebaseapp.com",
+  projectId: "fridge-ba431",
+  storageBucket: "fridge-ba431.appspot.com",
+  messagingSenderId: "748800175843",
+  appId: "1:748800175843:web:3022c69d44f06654b39fd6",
+  measurementId: "G-2EWECPPD9P",
 };
+// var firebaseConfig = {
+//   apiKey: "AIzaSyBf18UDGBhG0xoiyE0HkHRjL1Dm6DgSeFM",
+//   authDomain: "mission-class.firebaseapp.com",
+//   projectId: "mission-class",
+//   storageBucket: "mission-class.appspot.com",
+//   messagingSenderId: "525018390258",
+//   appId: "1:525018390258:web:d37f5dfe4dc61acefaba6b",
+//   measurementId: "G-CDQKK7T6FR",
+// };
 firebase.initializeApp(firebaseConfig);
 
 ReactDOM.render(

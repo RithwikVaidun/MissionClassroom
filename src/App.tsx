@@ -90,6 +90,7 @@ function App() {
     useState<FirebaseUsersCollection | null>(
       JSON.parse(localStorage.getItem("firebaseuser") as string)
     );
+  const [teachers, setTeachers] = useState<[]>();
   const [classmates, setClassmates] = useState<
     FirebaseClassesCollection[] | null
   >(JSON.parse(localStorage.getItem("classmates") as string));
@@ -198,39 +199,24 @@ function App() {
       name: user.displayName,
       classes: {},
     };
+
     if (!cls) return;
     cls.forEach((c, i, a) => {
       if (c && c.teacher && c.period) {
-        // If the user already has a class in firebase
-        // if (
-        //   firebaseUserInfo &&
-        //   firebaseUserInfo.classes[c.period] &&
-        //   (firebaseUserInfo.classes[c.period].period != c.period ||
-        //     firebaseUserInfo.classes[c.period].teacher != c.teacher)
-        // ) {
-        //   // The class is different from the one in firebase so delete user from the old class
-        //   let oldClassRef = db
-        //     .collection("Classes")
-        //     .doc(firebaseUserInfo.classes[c.period].id);
-        //   batch.update(oldClassRef, {
-        //     students: firebase.firestore.FieldValue.arrayRemove({
-        //       name: user.displayName,
-        //       id: user.uid,
-        //       photo: user.photoURL,
-        //     }),
-        //   });
-        //   // userInfo.classes[c.period] = firebase.firestore.FieldValue.delete();
-        // }
-
         // Update the firebase user info
         userInfo.classes[c.period] = {
           ...c,
           id: `${c.teacher}-${c.period}`,
           period: c.period,
           teacher: c.teacher,
-          teacherid: c.teacher,
         };
         let classRef = db.collection("Classes").doc(`${c.teacher}-${c.period}`);
+
+        let teachersRef = db.collection("Classes").doc("Teachers");
+        batch.update(teachersRef, {
+          allTeachers: firebase.firestore.FieldValue.arrayUnion(c.teacher),
+        });
+
         if (!user) return;
         batch.set(
           classRef,
@@ -349,11 +335,6 @@ function App() {
             }}
           >
             Logout
-            {/* {firebase &&
-              firebase.auth() &&
-              firebase.auth().currentUser &&
-              firebase.auth().currentUser.email &&
-              firebase.auth().currentUser.email} */}
           </Button>
         )}
       </Toolbar>

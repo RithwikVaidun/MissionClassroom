@@ -19,22 +19,15 @@ import {
 function EnterClasses(props: EnterClassesInterface) {
   const db = firebase.apps[0].firestore();
   const [cls, setCls] = useState<Cls[]>([
-    { period: 1, teacher: "" },
-    { period: 2, teacher: "" },
-    { period: 3, teacher: "" },
-    { period: 4, teacher: "" },
-    { period: 5, teacher: "" },
-    { period: 6, teacher: "" },
+    { period: -1, teacher: "" },
+    { period: -1, teacher: "" },
+    { period: -1, teacher: "" },
+    { period: -1, teacher: "" },
+    { period: -1, teacher: "" },
+    { period: -1, teacher: "" },
   ]);
-  const [items, setClsJSX] = useState<JSX.Element[]>([<p>Hi</p>]);
-  // const [periods, setPeriods] = useState<any>([
-  //   { p: 1, isDisabled: false },
-  //   { p: 2, isDisabled: false },
-  //   { p: 3, isDisabled: true },
-  //   { p: 4, isDisabled: false },
-  //   { p: 5, isDisabled: true },
-  //   { p: 6, isDisabled: false },
-  // ]);
+  const [teachers, setTeachers] = useState<string[]>();
+
   useEffect(() => {
     console.log(props.classes);
     if (props.classes) {
@@ -46,15 +39,22 @@ function EnterClasses(props: EnterClassesInterface) {
         };
       });
       for (let i = setclasses.length; i < 6; i++) {
-        setclasses.push({ period: i, teacher: "" });
+        setclasses.push({ period: -1, teacher: "" });
       }
       console.log(setclasses);
       setCls(setclasses);
     }
+    db.collection("Classes")
+      .doc("Teachers")
+      .get()
+      .then((doc) => {
+        if (doc.exists) {
+          let data = doc.data();
+          if (data) setTeachers(data!.allTeachers! as string[]);
+        }
+      });
   }, []);
-
-  var teachers: string[] = ["test"];
-
+  // let teacherss = ["test"];
   // db.collection("Teachers").onSnapshot((snap) => {
   //   snap.forEach((doc) => {
   //     console.log("hi");
@@ -106,7 +106,8 @@ function EnterClasses(props: EnterClassesInterface) {
                   </div>
                   <div style={{ float: "left" }}>
                     <Autocomplete
-                      options={teachers}
+                      // options={teachers}
+                      disableClearable
                       style={{ width: 130 }}
                       value={c ? c.teacher : ""}
                       onChange={(e, value: string | null) => {
@@ -157,6 +158,7 @@ function EnterClasses(props: EnterClassesInterface) {
         >
           Submit
         </Button>
+        {/* <p>{JSON.stringify(cls)}</p> */}
       </div>
     </>
   );

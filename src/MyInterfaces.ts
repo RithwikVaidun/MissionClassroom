@@ -11,8 +11,11 @@ export interface FirebaseUsersClassesDic {
     id: string;
     period: number;
     teacher: string;
-    teacherid: string;
   };
+}
+export interface Teachers {
+  classes: FirebaseUsersClassesDic;
+  name: string;
 }
 export interface FirebaseUsersCollection {
   classes: FirebaseUsersClassesDic;
