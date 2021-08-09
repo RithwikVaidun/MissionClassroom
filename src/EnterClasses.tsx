@@ -17,13 +17,13 @@ import {
 
 function EnterClasses(props: EnterClassesInterface) {
   const db = firebase.apps[0].firestore();
-  const [cls, setCls] = useState<Cls[] | null>([
-    { period: null, teacher: null },
-    { period: null, teacher: null },
-    { period: null, teacher: null },
-    { period: null, teacher: null },
-    { period: null, teacher: null },
-    { period: null, teacher: null },
+  const [cls, setCls] = useState<Cls[]>([
+    { period: -1, teacher: "" },
+    { period: -1, teacher: "" },
+    { period: -1, teacher: "" },
+    { period: -1, teacher: "" },
+    { period: -1, teacher: "" },
+    { period: -1, teacher: "" },
   ]);
   const [items, setClsJSX] = useState<JSX.Element[]>([<p>Hi</p>]);
   useEffect(() => {
@@ -33,7 +33,7 @@ function EnterClasses(props: EnterClassesInterface) {
         return { period: c.period, teacher: c.teacher };
       });
       for (let i = setclasses.length; i < 6; i++) {
-        setclasses.push(null);
+        setclasses.push({ period: -1, teacher: "" });
       }
       console.log(setclasses);
       setCls(setclasses);
@@ -98,9 +98,10 @@ function EnterClasses(props: EnterClassesInterface) {
                       onChange={(e, value: string | null) => {
                         let newArr: Cls[] = [...(cls ?? [])];
 
-                        if (newArr)
+                        if (value) {
                           newArr[i] = { ...newArr[i], teacher: value };
-                        setCls(newArr);
+                          setCls(newArr);
+                        }
                       }}
                       renderInput={(params) => (
                         <TextField

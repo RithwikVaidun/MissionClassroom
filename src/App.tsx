@@ -134,7 +134,7 @@ function App() {
     }
   }, [user]);
   useEffect(() => {
-    if (firebaseUserInfo) {
+    if (firebaseUserInfo && Object.keys(firebaseUserInfo.classes).length > 0) {
       console.log(firebaseUserInfo);
       let test = Object.keys(firebaseUserInfo.classes).map((x, i) => {
         return firebaseUserInfo.classes[x].id;
@@ -169,106 +169,83 @@ function App() {
     };
     if (!cls) return;
     cls.forEach((c, i, a) => {
-      console.log(c, "c");
       if (c && c.teacher && c.period) {
-        // console.log(firebaseUserInfo, "firebaseuserinfo");
-        if (firebaseUserInfo && firebaseUserInfo.classes[c.period]) {
-          if (
-            firebaseUserInfo.classes[c.period].period == c.period &&
-            firebaseUserInfo.classes[c.period].teacher == c.teacher
-          ) {
-          }
-          // Class is the same, do nothing
-          else {
-            // Class is not the same, delete the old class
-            let oldClassRef = db
-              .collection("Classes")
-              .doc(firebaseUserInfo.classes[c.period].id);
-            batch.update(oldClassRef, {
-              students: firebase.firestore.FieldValue.arrayRemove(user.uid),
-            });
-          }
-        }
+        // If the user already has a class in firebase
+        // if (
+        //   firebaseUserInfo &&
+        //   firebaseUserInfo.classes[c.period] &&
+        //   (firebaseUserInfo.classes[c.period].period != c.period ||
+        //     firebaseUserInfo.classes[c.period].teacher != c.teacher)
+        // ) {
+        //   // The class is different from the one in firebase so delete user from the old class
+        //   let oldClassRef = db
+        //     .collection("Classes")
+        //     .doc(firebaseUserInfo.classes[c.period].id);
+        //   batch.update(oldClassRef, {
+        //     students: firebase.firestore.FieldValue.arrayRemove({
+        //       name: user.displayName,
+        //       id: user.uid,
+        //       photo: user.photoURL,
+        //     }),
+        //   });
+        //   // userInfo.classes[c.period] = firebase.firestore.FieldValue.delete();
+        // }
+
+        // Update the firebase user info
         userInfo.classes[c.period] = {
           ...c,
-          id: "none",
+          id: `${c.teacher}-${c.period}`,
           period: c.period,
-          teacherid: "none",
+          teacher: c.teacher,
+          teacherid: c.teacher,
         };
-        console.log(userInfo, "userInfo inside");
-        console.log("Just before teacher", c.teacher);
-        var teacherRef = db.collection("Teachers").doc(c.teacher);
-        teacherRef.get().then((teadoc) => {
-          if (!teadoc.exists) {
-            // If there is no teacher document then create a teacher and a class
-
-            // Create the new class and set the batch
-            var newclass = db.collection("Classes").doc();
-            batch.set(newclass, {
-              period: c.period,
-              teacher: c.teacher,
-              students: [
-                { name: user.displayName, id: user.uid, photo: user.photoURL },
-              ],
-            });
-
-            // Create the new teacher and set the batch
-            let hi: FirebaseTeachersClassesDic = {};
-            hi[c.period] = newclass.id;
-            batch.set(teacherRef, {
-              classes: hi,
-              name: c.teacher,
-            });
-            userInfo.classes[c.period] = {
-              ...userInfo.classes[c.period],
-              id: newclass.id,
-              teacherid: teacherRef.id,
-            };
-          } else {
-            // There is a teacher
-            let teacherInformation = teadoc.data();
-
-            let classRef = db
-              .collection("Classes")
-              .doc(teacherInformation.classes[c.period]);
-
-            if (teacherInformation.classes[c.period]) {
-              // The teacher already has a class so add the student into the class
-              batch.update(classRef, {
-                students: firebase.firestore.FieldValue.arrayUnion({
-                  name: user.displayName,
-                  id: user.uid,
-                  photo: user.photoURL,
-                }),
-              });
-            } else {
-              // The teacher doesn't have a class so create a class
-              batch.set(classRef, {
-                period: c.period,
-                teacher: c.teacher,
-                students: [
-                  {
-                    name: user.displayName,
-                    id: user.uid,
-                    photo: user.photoURL,
-                  },
-                ],
-              });
-            }
-            // Add the student into the class
-            userInfo.classes[c.period] = {
-              ...userInfo.classes[c.period],
-              id: classRef.id,
-              teacherid: teacherRef.id,
-            };
-          }
-          if (i === a.length - 1) {
-            batch.set(userRef, userInfo);
-            batch.commit();
-          }
-        });
+        let classRef = db.collection("Classes").doc(`${c.teacher}-${c.period}`);
+        batch.set(
+          classRef,
+          {
+            period: c.period,
+            teacher: c.teacher,
+            students: firebase.firestore.FieldValue.arrayUnion({
+              name: user.displayName,
+              id: user.uid,
+              photo: user.photoURL,
+            }),
+          },
+          { merge: true }
+        );
+      } else {
       }
-      // Here
+    });
+    // userInfo.classes has the new classes and firebaseUserInfo.classes has the old classes
+    if (firebaseUserInfo) {
+      Object.keys(firebaseUserInfo.classes).forEach((x, i, a) => {
+        console.log(firebaseUserInfo);
+        console.log(firebaseUserInfo.classes[x], "firebaseUserInfo.classes[x]");
+        console.log(userInfo.classes[x], "userInfo.classes[x]");
+        if (
+          !userInfo.classes[x] ||
+          (firebaseUserInfo.classes[x] &&
+            userInfo.classes[x].id !== firebaseUserInfo.classes[x].id)
+        ) {
+          console.log("They are not the same!");
+          // If the class is different from the one in firebase delete user from the old class
+          let oldClassRef = db
+            .collection("Classes")
+            .doc(firebaseUserInfo.classes[x].id);
+          batch.update(oldClassRef, {
+            students: firebase.firestore.FieldValue.arrayRemove({
+              name: user.displayName,
+              id: user.uid,
+              photo: user.photoURL,
+            }),
+          });
+        }
+      });
+    }
+
+    batch.set(userRef, userInfo);
+    batch.commit().then(() => {
+      console.log("Successfully wrote data to firebase!");
     });
   }
 
