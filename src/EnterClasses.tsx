@@ -17,7 +17,14 @@ import {
 
 function EnterClasses(props: EnterClassesInterface) {
   const db = firebase.apps[0].firestore();
-  const [cls, setCls] = useState<Cls[] | null>(null);
+  const [cls, setCls] = useState<Cls[] | null>([
+    { period: null, teacher: null },
+    { period: null, teacher: null },
+    { period: null, teacher: null },
+    { period: null, teacher: null },
+    { period: null, teacher: null },
+    { period: null, teacher: null },
+  ]);
   const [items, setClsJSX] = useState<JSX.Element[]>([<p>Hi</p>]);
   useEffect(() => {
     console.log(props.classes);
@@ -37,6 +44,7 @@ function EnterClasses(props: EnterClassesInterface) {
 
   db.collection("Teachers").onSnapshot((snap) => {
     snap.forEach((doc) => {
+      console.log("hi");
       teachers.push(doc.id);
     });
   });

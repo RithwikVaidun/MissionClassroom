@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import "./App.css";
 import firebase from "firebase";
-import TextField from "@material-ui/core/TextField";
+// import TextField from "@material-ui/core/TextField";
 import { Button } from "@material-ui/core";
 
 import { createStyles, makeStyles, Theme } from "@material-ui/core/styles";
@@ -9,28 +9,28 @@ import AppBar from "@material-ui/core/AppBar";
 import Toolbar from "@material-ui/core/Toolbar";
 import Typography from "@material-ui/core/Typography";
 
-import IconButton from "@material-ui/core/IconButton";
-import MenuIcon from "@material-ui/icons/Menu";
-import InputLabel from "@material-ui/core/InputLabel";
-import MenuItem from "@material-ui/core/MenuItem";
-import Select from "@material-ui/core/Select";
-import Autocomplete from "@material-ui/lab/Autocomplete";
-import Card from "@material-ui/core/Card";
-import CardContent from "@material-ui/core/CardContent";
-import Box from "@material-ui/core/Box";
-import Paper from "@material-ui/core/Paper";
-import Grid from "@material-ui/core/Grid";
-import Avatar from "@material-ui/core/Avatar";
+// import IconButton from "@material-ui/core/IconButton";
+// import MenuIcon from "@material-ui/icons/Menu";
+// import InputLabel from "@material-ui/core/InputLabel";
+// import MenuItem from "@material-ui/core/MenuItem";
+// import Select from "@material-ui/core/Select";
+// import Autocomplete from "@material-ui/lab/Autocomplete";
+// import Card from "@material-ui/core/Card";
+// import CardContent from "@material-ui/core/CardContent";
+// import Box from "@material-ui/core/Box";
+// import Paper from "@material-ui/core/Paper";
+// import Grid from "@material-ui/core/Grid";
+// import Avatar from "@material-ui/core/Avatar";
 import MyClasses from "./MyClasses";
-import clsx from "clsx";
-import SwipeableDrawer from "@material-ui/core/SwipeableDrawer";
-import List from "@material-ui/core/List";
-import Divider from "@material-ui/core/Divider";
-import ListItem from "@material-ui/core/ListItem";
-import ListItemIcon from "@material-ui/core/ListItemIcon";
-import ListItemText from "@material-ui/core/ListItemText";
-import InboxIcon from "@material-ui/icons/MoveToInbox";
-import MailIcon from "@material-ui/icons/Mail";
+// import clsx from "clsx";
+// import SwipeableDrawer from "@material-ui/core/SwipeableDrawer";
+// import List from "@material-ui/core/List";
+// import Divider from "@material-ui/core/Divider";
+// import ListItem from "@material-ui/core/ListItem";
+// import ListItemIcon from "@material-ui/core/ListItemIcon";
+// import ListItemText from "@material-ui/core/ListItemText";
+// import InboxIcon from "@material-ui/icons/MoveToInbox";
+// import MailIcon from "@material-ui/icons/Mail";
 import EnterClasses from "./EnterClasses";
 
 import {
@@ -140,8 +140,7 @@ function App() {
         return firebaseUserInfo.classes[x].id;
       });
       console.log("test", test);
-      let ref = db.collection("Classes");
-      ref
+      db.collection("Classes")
         .where(firebase.firestore.FieldPath.documentId(), "in", test)
         .get()
         .then((snapshot) => {
@@ -159,8 +158,7 @@ function App() {
         });
     }
   }, [firebaseUserInfo]);
-
-  function writetoFirebase(cls: Cls[] | null) {
+  function writetoFirebase(cls: Cls[]) {
     if (!user) return;
     var batch = db.batch();
     let userRef = db.collection("Users").doc(user.uid);
@@ -169,86 +167,108 @@ function App() {
       name: user.displayName,
       classes: {},
     };
-    // batch.set(userRef, userInfo);
     if (!cls) return;
     cls.forEach((c, i, a) => {
-      if (!c.period) return;
-      userInfo.classes[c.period] = {
-        ...c,
-        id: "none",
-        period: c.period,
-      };
-      console.log(userInfo, "userInfo inside");
-      var teacherRef = db.collection("Teachers").doc(c.teacher);
-      teacherRef.get().then((teadoc) => {
-        if (!teadoc.exists) {
-          // If there is no teacher document then create a teacher and a class
-
-          // Create the new class and set the batch
-          var newclass = db.collection("Classes").doc();
-          batch.set(newclass, {
-            period: c.period,
-            teacher: c.teacher,
-            students: [
-              { name: user.displayName, id: user.uid, photo: user.photoURL },
-            ],
-          });
-
-          // Create the new teacher and set the batch
-          let hi: FirebaseTeachersClassesDic = {};
-          hi[c.period] = newclass.id;
-          // hi[1] = "hi";
-          batch.set(teacherRef, {
-            classes: hi,
-            name: c.teacher,
-          });
-          userInfo.classes[c.period] = {
-            ...userInfo.classes[c.period],
-            id: newclass.id,
-          };
-          // batch.update(userRef, userInfo);
-        } else {
-          // There is a teacher
-
-          let teacherInformation = teadoc.data();
-          if (!teacherInformation) return;
-
-          let classRef = db
-            .collection("Classes")
-            .doc(teacherInformation.classes[c.period]);
-
-          if (teacherInformation.classes[c.period]) {
-            // The teacher already has a class so add the student into the class
-            batch.update(classRef, {
-              students: firebase.firestore.FieldValue.arrayUnion({
-                name: user.displayName,
-                id: user.uid,
-                photo: user.photoURL,
-              }),
+      console.log(c, "c");
+      if (c && c.teacher && c.period) {
+        // console.log(firebaseUserInfo, "firebaseuserinfo");
+        if (firebaseUserInfo && firebaseUserInfo.classes[c.period]) {
+          if (
+            firebaseUserInfo.classes[c.period].period == c.period &&
+            firebaseUserInfo.classes[c.period].teacher == c.teacher
+          ) {
+          }
+          // Class is the same, do nothing
+          else {
+            // Class is not the same, delete the old class
+            let oldClassRef = db
+              .collection("Classes")
+              .doc(firebaseUserInfo.classes[c.period].id);
+            batch.update(oldClassRef, {
+              students: firebase.firestore.FieldValue.arrayRemove(user.uid),
             });
-          } else {
-            // The teacher doesn't have a class so create a class
-            batch.set(classRef, {
+          }
+        }
+        userInfo.classes[c.period] = {
+          ...c,
+          id: "none",
+          period: c.period,
+          teacherid: "none",
+        };
+        console.log(userInfo, "userInfo inside");
+        console.log("Just before teacher", c.teacher);
+        var teacherRef = db.collection("Teachers").doc(c.teacher);
+        teacherRef.get().then((teadoc) => {
+          if (!teadoc.exists) {
+            // If there is no teacher document then create a teacher and a class
+
+            // Create the new class and set the batch
+            var newclass = db.collection("Classes").doc();
+            batch.set(newclass, {
               period: c.period,
               teacher: c.teacher,
               students: [
                 { name: user.displayName, id: user.uid, photo: user.photoURL },
               ],
             });
+
+            // Create the new teacher and set the batch
+            let hi: FirebaseTeachersClassesDic = {};
+            hi[c.period] = newclass.id;
+            batch.set(teacherRef, {
+              classes: hi,
+              name: c.teacher,
+            });
+            userInfo.classes[c.period] = {
+              ...userInfo.classes[c.period],
+              id: newclass.id,
+              teacherid: teacherRef.id,
+            };
+          } else {
+            // There is a teacher
+            let teacherInformation = teadoc.data();
+
+            let classRef = db
+              .collection("Classes")
+              .doc(teacherInformation.classes[c.period]);
+
+            if (teacherInformation.classes[c.period]) {
+              // The teacher already has a class so add the student into the class
+              batch.update(classRef, {
+                students: firebase.firestore.FieldValue.arrayUnion({
+                  name: user.displayName,
+                  id: user.uid,
+                  photo: user.photoURL,
+                }),
+              });
+            } else {
+              // The teacher doesn't have a class so create a class
+              batch.set(classRef, {
+                period: c.period,
+                teacher: c.teacher,
+                students: [
+                  {
+                    name: user.displayName,
+                    id: user.uid,
+                    photo: user.photoURL,
+                  },
+                ],
+              });
+            }
+            // Add the student into the class
+            userInfo.classes[c.period] = {
+              ...userInfo.classes[c.period],
+              id: classRef.id,
+              teacherid: teacherRef.id,
+            };
           }
-          // Add the student into the class
-          userInfo.classes[c.period] = {
-            ...userInfo.classes[c.period],
-            id: classRef.id,
-          };
-          // batch.update(userRef, userInfo);
-        }
-        if (i === a.length - 1) {
-          // console.log(userInfo, "userInfo");
-          batch.set(userRef, userInfo);
-          batch.commit();
-        }
-      });
+          if (i === a.length - 1) {
+            batch.set(userRef, userInfo);
+            batch.commit();
+          }
+        });
+      }
+      // Here
     });
   }
 
