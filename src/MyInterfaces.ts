@@ -44,3 +44,8 @@ export interface MyClassesInterface{
   classmates: FirebaseClassesCollection[] | null;
   editClass: () => void;
 }
+
+export interface EnterClassesInterface{
+  writeToDatabase: (cls: Cls[] | null) => void;
+  classes: FirebaseClassesCollection[] | null;
+}

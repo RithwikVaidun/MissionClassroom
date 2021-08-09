@@ -65,7 +65,7 @@ const useStyles = makeStyles((theme: Theme) =>
 function App() {
   const firebaseApp = firebase.apps[0];
   const db = firebaseApp.firestore();
-  const [cls, setCls] = useState<Cls[] | null>(null);
+
   const [user, setUser] = useState<firebase.User | null>(null);
   const [firebaseUserInfo, setFirebaseUserInfo] =
     useState<FirebaseUsersCollection | null>(null);
@@ -122,7 +122,7 @@ function App() {
     }
   }, [firebaseUserInfo]);
 
-  function writetoFirebase() {
+  function writetoFirebase(cls: Cls[] | null) {
     if (!user) return;
     var batch = db.batch();
     let userRef = db.collection("Users").doc(user.uid);
@@ -134,7 +134,12 @@ function App() {
     // batch.set(userRef, userInfo);
     if (!cls) return;
     cls.forEach((c, i, a) => {
-      userInfo.classes[c.period] = { ...c, id: "none" };
+      if (!c.period) return;
+      userInfo.classes[c.period] = {
+        ...c,
+        id: "none",
+        period: c.period,
+      };
       console.log(userInfo, "userInfo inside");
       var teacherRef = db.collection("Teachers").doc(c.teacher);
       teacherRef.get().then((teadoc) => {
@@ -212,13 +217,6 @@ function App() {
   const editClasses = () => {
     setEditMode(true);
   };
-  var teachers: string[] = [];
-
-  db.collection("Teachers").onSnapshot((snap) => {
-    snap.forEach((doc) => {
-      teachers.push(doc.id);
-    });
-  });
 
   firebase.auth().onAuthStateChanged(function (user) {
     if (user) {
@@ -293,7 +291,7 @@ function App() {
   const TopBar = () => (
     <AppBar position="static">
       <Toolbar>
-        <IconButton
+        {/* <IconButton
           edge="start"
           className={classes.menuButton}
           color="inherit"
@@ -325,7 +323,6 @@ function App() {
       </Toolbar>
     </AppBar>
   );
-
   if (!user) {
     return (
       <>
@@ -343,37 +340,15 @@ function App() {
     );
   }
   return (
-    <div className={classes.root}>
+    // <div className={classes.root}>
+    <>
       <TopBar />
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          height: "60vh",
-        }}
-      >
-        <ul>
-          {items.map((reptile, i) => (
-            <div key={i}>{reptile}</div>
-          ))}
-        </ul>
-      </div>
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-        }}
-      >
-        <Button variant="contained" color="primary" onClick={writetoFirebase}>
-          Submit
-        </Button>
-      </div>
+      <EnterClasses writeToDatabase={writetoFirebase} classes={null} />
 
       {/* <p>{JSON.stringify(user)}</p> */}
       {/* <p>{JSON.stringify(cls)}</p> */}
-    </div>
+    </>
+    // </div>
   );
 }
 
