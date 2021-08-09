@@ -41,12 +41,12 @@ export interface FirebaseClassesCollection {
   period: number;
 }
 
-export interface MyClassesInterface{
+export interface MyClassesInterface {
   classmates: FirebaseClassesCollection[] | null;
   editClass: () => void;
 }
 
-export interface EnterClassesInterface{
+export interface EnterClassesInterface {
   writeToDatabase: (cls: Cls[]) => void;
   classes: FirebaseClassesCollection[] | null;
 }

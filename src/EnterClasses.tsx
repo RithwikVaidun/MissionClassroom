@@ -3,11 +3,12 @@ import {
   Button,
   MenuItem,
   InputLabel,
-  Select,
   TextField,
+  Select,
 } from "@material-ui/core";
 import Autocomplete from "@material-ui/lab/Autocomplete";
 import firebase from "firebase";
+// import Select from "react-select";
 
 import {
   EnterClassesInterface,
@@ -18,44 +19,50 @@ import {
 function EnterClasses(props: EnterClassesInterface) {
   const db = firebase.apps[0].firestore();
   const [cls, setCls] = useState<Cls[]>([
-    { period: -1, teacher: "" },
-    { period: -1, teacher: "" },
-    { period: -1, teacher: "" },
-    { period: -1, teacher: "" },
-    { period: -1, teacher: "" },
-    { period: -1, teacher: "" },
+    { period: 1, teacher: "" },
+    { period: 2, teacher: "" },
+    { period: 3, teacher: "" },
+    { period: 4, teacher: "" },
+    { period: 5, teacher: "" },
+    { period: 6, teacher: "" },
   ]);
   const [items, setClsJSX] = useState<JSX.Element[]>([<p>Hi</p>]);
-  const [periods, setPeriods] = useState([
-    { p: "1", isDisabled: false },
-    { p: "2", isDisabled: false },
-    { p: "3", isDisabled: true },
-    { p: "4", isDisabled: false },
-    { p: "5", isDisabled: true },
-    { p: "6", isDisabled: false },
-  ]);
+  // const [periods, setPeriods] = useState<any>([
+  //   { p: 1, isDisabled: false },
+  //   { p: 2, isDisabled: false },
+  //   { p: 3, isDisabled: true },
+  //   { p: 4, isDisabled: false },
+  //   { p: 5, isDisabled: true },
+  //   { p: 6, isDisabled: false },
+  // ]);
   useEffect(() => {
     console.log(props.classes);
     if (props.classes) {
       let setclasses: Cls[] | null = props.classes.map((c) => {
-        return { period: c.period, teacher: c.teacher };
+        return {
+          period: c.period,
+          teacher: c.teacher,
+          isDisabled: c.period ? true : false,
+        };
       });
       for (let i = setclasses.length; i < 6; i++) {
-        setclasses.push({ period: -1, teacher: "" });
+        setclasses.push({ period: i, teacher: "" });
       }
       console.log(setclasses);
       setCls(setclasses);
     }
   }, []);
 
-  var teachers: string[] = [];
+  var teachers: string[] = ["test"];
 
-  db.collection("Teachers").onSnapshot((snap) => {
-    snap.forEach((doc) => {
-      console.log("hi");
-      teachers.push(doc.id);
-    });
-  });
+  // db.collection("Teachers").onSnapshot((snap) => {
+  //   snap.forEach((doc) => {
+  //     console.log("hi");
+  //     teachers.push(doc.id);
+  //   });
+  // });
+  // const test = periods.map((a: any) => a.p);
+  // console.log(periods);
 
   return (
     <>
@@ -73,6 +80,8 @@ function EnterClasses(props: EnterClassesInterface) {
               return (
                 <div key={i}>
                   <div style={{ float: "left" }}>
+                    {/* <InputLabel>Period</InputLabel> */}
+                    {/* <Select options={test}></Select> */}
                     <InputLabel>Period</InputLabel>
                     <Select
                       style={{ minWidth: 120 }}
@@ -90,12 +99,13 @@ function EnterClasses(props: EnterClassesInterface) {
                         // }
                       }}
                     >
-                      {/* <MenuItem value={1}>1</MenuItem>
+                      <MenuItem>Blank</MenuItem>
+                      <MenuItem value={1}>1</MenuItem>
                       <MenuItem value={2}>2</MenuItem>
                       <MenuItem value={3}>3</MenuItem>
                       <MenuItem value={4}>4</MenuItem>
                       <MenuItem value={5}>5</MenuItem>
-                      <MenuItem value={6}>6</MenuItem> */}
+                      <MenuItem value={6}>6</MenuItem>
                     </Select>
                   </div>
                   <div style={{ float: "left" }}>
