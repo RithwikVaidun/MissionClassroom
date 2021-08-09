@@ -83,12 +83,16 @@ function App() {
   const firebaseApp = firebase.apps[0];
   const db = firebaseApp.firestore();
 
-  const [user, setUser] = useState<firebase.User | null>(null);
+  const [loggedIn, setLoggedIn] = useState<boolean>(
+    localStorage.getItem("firebaseuser") ? true : false
+  );
   const [firebaseUserInfo, setFirebaseUserInfo] =
-    useState<FirebaseUsersCollection | null>(null);
+    useState<FirebaseUsersCollection | null>(
+      JSON.parse(localStorage.getItem("firebaseuser") as string)
+    );
   const [classmates, setClassmates] = useState<
     FirebaseClassesCollection[] | null
-  >(null);
+  >(JSON.parse(localStorage.getItem("classmates") as string));
   const [editMode, setEditMode] = useState(false);
 
   const [state, setState] = React.useState({
@@ -113,26 +117,54 @@ function App() {
     };
 
   const classes = useStyles();
-  useEffect(() => {
-    if (firebase.auth().currentUser) {
-      setUser(firebase.auth().currentUser);
-    } else {
-      setUser(null);
-    }
-  }, []);
 
-  useEffect(() => {
-    if (user) {
-      db.collection("Users")
-        .doc(user.uid)
-        .get()
-        .then((snapshot) => {
-          if (snapshot.exists) {
-            setFirebaseUserInfo(snapshot.data() as FirebaseUsersCollection);
-          }
-        });
-    }
-  }, [user]);
+  // useEffect(() => {
+  //   if (firebase.auth().currentUser) {
+  //     let muser = firebase.auth().currentUser;
+  //     if (localStorage.getItem("firebaseuser")) {
+  //       setFirebaseUserInfo(
+  //         JSON.parse(localStorage.getItem("firebaseuser") as string)
+  //       );
+  //     } else {
+  //       if (muser) {
+  //         db.collection("Users")
+  //           .doc(muser.uid)
+  //           .get()
+  //           .then((snapshot) => {
+  //             if (snapshot.exists) {
+  //               setFirebaseUserInfo(snapshot.data() as FirebaseUsersCollection);
+  //               localStorage.setItem(
+  //                 "firebaseuser",
+  //                 JSON.stringify(snapshot.data())
+  //               );
+  //             }
+  //           });
+  //       }
+  //     }
+  //   } else {
+  //     setUser(null);
+  //   }
+  // }, []);
+
+  // useEffect(() => {
+  //   if (user) {
+  //     if (localStorage.getItem("firebaseuser")) {
+  //       setFirebaseUserInfo(
+  //         JSON.parse(localStorage.getItem("firebaseuser") as string)
+  //       );
+  //     } else {
+  //       db.collection("Users")
+  //         .doc(user.uid)
+  //         .get()
+  //         .then((snapshot) => {
+  //           if (snapshot.exists) {
+  //             setFirebaseUserInfo(snapshot.data() as FirebaseUsersCollection);
+  //           }
+  //         });
+  //     }
+  //   }
+  // }, [user]);
+
   useEffect(() => {
     if (firebaseUserInfo && Object.keys(firebaseUserInfo.classes).length > 0) {
       console.log(firebaseUserInfo);
@@ -147,11 +179,9 @@ function App() {
           let allClassmates = snapshot.docs.map((doc) => {
             return doc.data() as FirebaseClassesCollection;
           });
-          // snapshot.forEach((doc) => {
-          //   console.log("doc", doc.data());
-          // });
           console.log(allClassmates, "ac");
           setClassmates(allClassmates);
+          localStorage.setItem("classmates", JSON.stringify(allClassmates));
         })
         .catch((error) => {
           console.log("error", error);
@@ -159,6 +189,7 @@ function App() {
     }
   }, [firebaseUserInfo]);
   function writetoFirebase(cls: Cls[]) {
+    let user = firebase.auth().currentUser;
     if (!user) return;
     var batch = db.batch();
     let userRef = db.collection("Users").doc(user.uid);
@@ -200,6 +231,7 @@ function App() {
           teacherid: c.teacher,
         };
         let classRef = db.collection("Classes").doc(`${c.teacher}-${c.period}`);
+        if (!user) return;
         batch.set(
           classRef,
           {
@@ -232,6 +264,7 @@ function App() {
           let oldClassRef = db
             .collection("Classes")
             .doc(firebaseUserInfo.classes[x].id);
+          if (!user) return;
           batch.update(oldClassRef, {
             students: firebase.firestore.FieldValue.arrayRemove({
               name: user.displayName,
@@ -246,6 +279,15 @@ function App() {
     batch.set(userRef, userInfo);
     batch.commit().then(() => {
       console.log("Successfully wrote data to firebase!");
+      if (!user) return;
+      db.collection("Users")
+        .doc(user.uid)
+        .get()
+        .then((snapshot) => {
+          setFirebaseUserInfo(snapshot.data() as FirebaseUsersCollection);
+          localStorage.setItem("firebaseuser", JSON.stringify(snapshot.data()));
+          setEditMode(false);
+        });
     });
   }
 
@@ -256,10 +298,10 @@ function App() {
   firebase.auth().onAuthStateChanged(function (user) {
     if (user) {
       //&& user.email?.includes("@fusdk12.net")
-      setUser(user);
+      setLoggedIn(true);
       // User is signed in.
     } else {
-      setUser(null);
+      setLoggedIn(false);
       // No user is signed in.
     }
   });
@@ -288,35 +330,10 @@ function App() {
   const TopBar = () => (
     <AppBar position="static">
       <Toolbar>
-        {/* <IconButton
-          edge="start"
-          className={classes.menuButton}
-          color="inherit"
-          aria-label="menu"
-        >
-          <div>
-            href="/signin"
-            {(["left"] as Anchor[]).map((anchor) => (
-              <React.Fragment key={anchor}>
-                <Button onClick={toggleDrawer(anchor, true)}>{anchor}</Button>
-                <SwipeableDrawer
-                  anchor={anchor}
-                  open={state[anchor]}
-                  onClose={toggleDrawer(anchor, false)}
-                  onOpen={toggleDrawer(anchor, true)}
-                >
-                  {list(anchor)}
-                </SwipeableDrawer>
-              </React.Fragment>
-            ))}
-          </div>
-          <MenuIcon />
-        </IconButton> */}
-
         <Typography variant="h6" className={classes.title}>
           Mission Classroom
         </Typography>
-        {!user ? (
+        {!loggedIn ? (
           <Button
             onClick={() => {
               const googleAuthProvider = new firebase.auth.GoogleAuthProvider();
@@ -331,19 +348,25 @@ function App() {
               firebase.auth().signOut();
             }}
           >
-            Logout {user.email}
+            Logout
+            {/* {firebase &&
+              firebase.auth() &&
+              firebase.auth().currentUser &&
+              firebase.auth().currentUser.email &&
+              firebase.auth().currentUser.email} */}
           </Button>
         )}
       </Toolbar>
     </AppBar>
   );
-  if (!user) {
+  if (!loggedIn) {
     return (
       <>
         <TopBar /> <h1> Please log in with your school account</h1>
       </>
     );
   } else if (editMode) {
+    console.log("Edit mode");
     return (
       <>
         <TopBar />
@@ -352,6 +375,7 @@ function App() {
     );
     // return <EditClasses />;
   } else if (firebaseUserInfo) {
+    console.log("firebaseUserInfo");
     return (
       <>
         <TopBar />
@@ -360,6 +384,7 @@ function App() {
       </>
     );
   }
+  console.log("First enter classes");
   return (
     // <div className={classes.root}>
     <>

@@ -94,12 +94,8 @@ function EnterClasses(props: EnterClassesInterface) {
                           period: e.target.value as number,
                         };
                         setCls(newArr);
-                        // if (e.target.value) {
-                        // setCls([...cls, { period: e.target.value }]);
-                        // }
                       }}
                     >
-                      <MenuItem>Blank</MenuItem>
                       <MenuItem value={1}>1</MenuItem>
                       <MenuItem value={2}>2</MenuItem>
                       <MenuItem value={3}>3</MenuItem>
