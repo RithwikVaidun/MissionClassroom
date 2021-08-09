@@ -1,7 +1,7 @@
 // Interface for when the user enters their classes
 export interface Cls {
   period: number | null;
-  teacher: string | null;
+  teacher: string | undefined;
 }
 
 // Interface for firebase student

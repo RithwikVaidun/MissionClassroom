@@ -26,7 +26,7 @@ function EnterClasses(props: EnterClassesInterface) {
     { period: -1, teacher: "" },
     { period: -1, teacher: "" },
   ]);
-  const [teachers, setTeachers] = useState<string[]>();
+  const [teachers, setTeachers] = useState<string[]>([]);
 
   useEffect(() => {
     console.log(props.classes);
@@ -50,7 +50,9 @@ function EnterClasses(props: EnterClassesInterface) {
       .then((doc) => {
         if (doc.exists) {
           let data = doc.data();
-          if (data) setTeachers(data!.allTeachers! as string[]);
+          if (data)
+            data.allTeachers ? setTeachers(data.allTeachers) : setTeachers([]);
+          // if (data.allTeachers) setTeachers(data!.allTeachers! as string[]);
         }
       });
   }, []);
@@ -106,7 +108,7 @@ function EnterClasses(props: EnterClassesInterface) {
                   </div>
                   <div style={{ float: "left" }}>
                     <Autocomplete
-                      // options={teachers}
+                      options={teachers ? teachers : []}
                       disableClearable
                       style={{ width: 130 }}
                       value={c ? c.teacher : ""}
