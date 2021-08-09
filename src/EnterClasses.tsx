@@ -19,6 +19,14 @@ function EnterClasses(props: EnterClassesInterface) {
   const db = firebase.apps[0].firestore();
   const [cls, setCls] = useState<Cls[] | null>(null);
   const [items, setClsJSX] = useState<JSX.Element[]>([<p>Hi</p>]);
+  const [periods, setPeriods] = useState([
+    { p: "1", isDisabled: false },
+    { p: "2", isDisabled: false },
+    { p: "3", isDisabled: true },
+    { p: "4", isDisabled: false },
+    { p: "5", isDisabled: true },
+    { p: "6", isDisabled: false },
+  ]);
   useEffect(() => {
     console.log(props.classes);
     if (props.classes) {
@@ -74,12 +82,12 @@ function EnterClasses(props: EnterClassesInterface) {
                         // }
                       }}
                     >
-                      <MenuItem value={1}>1</MenuItem>
+                      {/* <MenuItem value={1}>1</MenuItem>
                       <MenuItem value={2}>2</MenuItem>
                       <MenuItem value={3}>3</MenuItem>
                       <MenuItem value={4}>4</MenuItem>
                       <MenuItem value={5}>5</MenuItem>
-                      <MenuItem value={6}>6</MenuItem>
+                      <MenuItem value={6}>6</MenuItem> */}
                     </Select>
                   </div>
                   <div style={{ float: "left" }}>

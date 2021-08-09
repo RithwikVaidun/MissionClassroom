@@ -38,6 +38,7 @@ import {
   FirebaseClassesCollection,
   FirebaseTeachersClassesDic,
 } from "./MyInterfaces";
+import { ClassRounded } from "@material-ui/icons";
 // import SignIn from "./SignIn";
 // import MyClasses from "./MyClasses";
 
@@ -171,71 +172,37 @@ function App() {
     // batch.set(userRef, userInfo);
     if (!cls) return;
     cls.forEach((c, i, a) => {
-      userInfo.classes[c.period] = { ...c, id: "none" };
+      userInfo.classes[c.period] = {
+        ...c,
+        id: `${c.teacher}Period${c.period}`,
+      };
       console.log(userInfo, "userInfo inside");
-      var teacherRef = db.collection("Teachers").doc(c.teacher);
-      teacherRef.get().then((teadoc) => {
-        if (!teadoc.exists) {
-          // If there is no teacher document then create a teacher and a class
+      // var teacherRef = db.collection("Teachers").doc(c.teacher);
+      var classRef = db
+        .collection("Classes")
+        .doc(`${c.teacher}Period${c.period}`);
 
-          // Create the new class and set the batch
-          var newclass = db.collection("Classes").doc();
-          batch.set(newclass, {
+      classRef.get().then((doc) => {
+        if (doc.exists) {
+          batch.update(classRef, {
+            students: firebase.firestore.FieldValue.arrayUnion({
+              name: user.displayName,
+              id: user.uid,
+              photo: user.photoURL,
+            }),
+          });
+        } else {
+          batch.set(classRef, {
             period: c.period,
             teacher: c.teacher,
             students: [
-              { name: user.displayName, id: user.uid, photo: user.photoURL },
-            ],
-          });
-
-          // Create the new teacher and set the batch
-          let hi: FirebaseTeachersClassesDic = {};
-          hi[c.period] = newclass.id;
-          // hi[1] = "hi";
-          batch.set(teacherRef, {
-            classes: hi,
-            name: c.teacher,
-          });
-          userInfo.classes[c.period] = {
-            ...userInfo.classes[c.period],
-            id: newclass.id,
-          };
-          // batch.update(userRef, userInfo);
-        } else {
-          // There is a teacher
-
-          let teacherInformation = teadoc.data();
-          if (!teacherInformation) return;
-
-          let classRef = db
-            .collection("Classes")
-            .doc(teacherInformation.classes[c.period]);
-
-          if (teacherInformation.classes[c.period]) {
-            // The teacher already has a class so add the student into the class
-            batch.update(classRef, {
-              students: firebase.firestore.FieldValue.arrayUnion({
+              {
                 name: user.displayName,
                 id: user.uid,
                 photo: user.photoURL,
-              }),
-            });
-          } else {
-            // The teacher doesn't have a class so create a class
-            batch.set(classRef, {
-              period: c.period,
-              teacher: c.teacher,
-              students: [
-                { name: user.displayName, id: user.uid, photo: user.photoURL },
-              ],
-            });
-          }
-          // Add the student into the class
-          userInfo.classes[c.period] = {
-            ...userInfo.classes[c.period],
-            id: classRef.id,
-          };
-          // batch.update(userRef, userInfo);
+              },
+            ],
+          });
         }
         if (i === a.length - 1) {
           // console.log(userInfo, "userInfo");
