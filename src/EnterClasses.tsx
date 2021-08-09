@@ -17,7 +17,14 @@ import {
 
 function EnterClasses(props: EnterClassesInterface) {
   const db = firebase.apps[0].firestore();
-  const [cls, setCls] = useState<Cls[] | null>(null);
+  const [cls, setCls] = useState<Cls[]>([
+    { period: -1, teacher: "" },
+    { period: -1, teacher: "" },
+    { period: -1, teacher: "" },
+    { period: -1, teacher: "" },
+    { period: -1, teacher: "" },
+    { period: -1, teacher: "" },
+  ]);
   const [items, setClsJSX] = useState<JSX.Element[]>([<p>Hi</p>]);
   const [periods, setPeriods] = useState([
     { p: "1", isDisabled: false },
@@ -34,7 +41,7 @@ function EnterClasses(props: EnterClassesInterface) {
         return { period: c.period, teacher: c.teacher };
       });
       for (let i = setclasses.length; i < 6; i++) {
-        setclasses.push(null);
+        setclasses.push({ period: -1, teacher: "" });
       }
       console.log(setclasses);
       setCls(setclasses);
@@ -45,6 +52,7 @@ function EnterClasses(props: EnterClassesInterface) {
 
   db.collection("Teachers").onSnapshot((snap) => {
     snap.forEach((doc) => {
+      console.log("hi");
       teachers.push(doc.id);
     });
   });
@@ -98,9 +106,10 @@ function EnterClasses(props: EnterClassesInterface) {
                       onChange={(e, value: string | null) => {
                         let newArr: Cls[] = [...(cls ?? [])];
 
-                        if (newArr)
+                        if (value) {
                           newArr[i] = { ...newArr[i], teacher: value };
-                        setCls(newArr);
+                          setCls(newArr);
+                        }
                       }}
                       renderInput={(params) => (
                         <TextField

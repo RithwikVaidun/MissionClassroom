@@ -1,7 +1,7 @@
 // Interface for when the user enters their classes
 export interface Cls {
-  period: number;
-  teacher: string;
+  period: number | null;
+  teacher: string | null;
 }
 
 // Interface for firebase student
@@ -11,6 +11,7 @@ export interface FirebaseUsersClassesDic {
     id: string;
     period: number;
     teacher: string;
+    teacherid: string;
   };
 }
 export interface FirebaseUsersCollection {
@@ -46,6 +47,6 @@ export interface MyClassesInterface{
 }
 
 export interface EnterClassesInterface{
-  writeToDatabase: (cls: Cls[] | null) => void;
+  writeToDatabase: (cls: Cls[]) => void;
   classes: FirebaseClassesCollection[] | null;
 }
