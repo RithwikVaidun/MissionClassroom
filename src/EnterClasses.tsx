@@ -1,23 +1,9 @@
 import React, { useState, useEffect } from "react";
-import {
-  Button,
-  MenuItem,
-  InputLabel,
-  TextField,
-  Select,
-} from "@material-ui/core";
-import Autocomplete from "@material-ui/lab/Autocomplete";
+import { Button, MenuItem, InputLabel, Select } from "@material-ui/core";
 import MyAutoComplete from "./MyAutoComplete";
 import firebase from "firebase";
-import { createFilterOptions } from "@material-ui/lab/Autocomplete";
 
-import {
-  EnterClassesInterface,
-  Cls,
-  FirebaseClassesCollection,
-} from "./MyInterfaces";
-
-const filter = createFilterOptions<string>();
+import { EnterClassesInterface, Cls } from "./MyInterfaces";
 
 function EnterClasses(props: EnterClassesInterface) {
   const db = firebase.apps[0].firestore();
@@ -125,7 +111,6 @@ function EnterClasses(props: EnterClassesInterface) {
   ]);
 
   useEffect(() => {
-    console.log(props.classes);
     if (props.classes) {
       let setclasses: Cls[] | null = props.classes.map((c) => {
         return {
@@ -137,14 +122,12 @@ function EnterClasses(props: EnterClassesInterface) {
       for (let i = setclasses.length; i < 6; i++) {
         setclasses.push({ period: -1, teacher: "" });
       }
-      console.log(setclasses);
       setCls(setclasses);
     }
     db.collection("Classes")
       .doc("Teachers")
       .get()
       .then((doc) => {
-        console.log("Got the class!");
         if (doc.exists) {
           let data = doc.data();
 
@@ -169,8 +152,6 @@ function EnterClasses(props: EnterClassesInterface) {
               return (
                 <div key={i}>
                   <div style={{ float: "left" }}>
-                    {/* <InputLabel>Period</InputLabel> */}
-                    {/* <Select options={test}></Select> */}
                     <InputLabel>Period</InputLabel>
                     <Select
                       style={{ minWidth: 120 }}
@@ -185,6 +166,8 @@ function EnterClasses(props: EnterClassesInterface) {
                         setCls(newArr);
                       }}
                     >
+                      <MenuItem value={""}>None</MenuItem>
+
                       <MenuItem value={1}>1</MenuItem>
                       <MenuItem value={2}>2</MenuItem>
                       <MenuItem value={3}>3</MenuItem>

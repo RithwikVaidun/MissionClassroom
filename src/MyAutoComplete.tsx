@@ -15,8 +15,6 @@ interface AutoC {
 }
 
 export default function FreeSoloCreateOption(props: AutoC) {
-  const [asdasd, setAsdasd] = React.useState<string | null>(null);
-
   return (
     <Autocomplete
       value={props.c.teacher}
@@ -26,7 +24,6 @@ export default function FreeSoloCreateOption(props: AutoC) {
         props.setCls(newArr);
       }}
       filterOptions={(options, params) => {
-        console.log(options);
         const filtered = filter(options, params);
 
         // Suggest the creation of a new value
@@ -48,12 +45,7 @@ export default function FreeSoloCreateOption(props: AutoC) {
       style={{ width: 300 }}
       freeSolo
       renderInput={(params) => (
-        <TextField
-          {...params}
-          style={{ width: 180 }}
-          label="Teachers"
-          variant="outlined"
-        />
+        <TextField {...params} style={{ width: 180 }} label="Teacher" />
       )}
     />
   );
