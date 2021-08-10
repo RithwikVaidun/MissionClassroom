@@ -10,7 +10,6 @@ import Autocomplete from "@material-ui/lab/Autocomplete";
 import MyAutoComplete from "./MyAutoComplete";
 import firebase from "firebase";
 import { createFilterOptions } from "@material-ui/lab/Autocomplete";
-// import Select from "react-select";
 
 import {
   EnterClassesInterface,
@@ -145,14 +144,11 @@ function EnterClasses(props: EnterClassesInterface) {
       .doc("Teachers")
       .get()
       .then((doc) => {
+        console.log("Got the class!");
         if (doc.exists) {
           let data = doc.data();
 
           if (data) setTeachers(teachers.concat(data.allTeachers));
-          //   data.allTeachers
-          //     ? setTeachers([...teachers, data.allTeachers])
-          //     : setTeachers([]);
-          // if (data.allTeachers) setTeachers(data!.allTeachers! as string[]);
         }
       });
   }, []);
@@ -205,106 +201,10 @@ function EnterClasses(props: EnterClassesInterface) {
                       cls={cls}
                       i={i}
                     />
-                    {/* <Autocomplete
-                      value={c ? c.teacher : ""}
-                      onChange={(event, value) => {
-                        let newArr: Cls[] = [...(cls ?? [])];
-
-                        if (typeof value === "string") {
-                          newArr[i] = { ...newArr[i], teacher: value };
-                          setCls(newArr);
-                        } else if (value) {
-                          // Create a new value from the user input
-                          newArr[i] = { ...newArr[i], teacher: value };
-                          setCls(newArr);
-                        } else {
-                          newArr[i] = { ...newArr[i], teacher: value };
-                          setCls(newArr);
-                        }
-                      }}
-                      filterOptions={(options, params) => {
-                        const filtered = filter(options, params);
-
-                        // Suggest the creation of a new value
-                        if (params.inputValue !== "") {
-                          filtered.push(params.inputValue);
-                        }
-
-                        return filtered;
-                      }}
-                      selectOnFocus
-                      clearOnBlur
-                      handleHomeEndKeys
-                      options={teachers}
-                      getOptionLabel={(option) => {
-                        // Value selected with enter, right from the input
-                        if (typeof option === "string") {
-                          return option;
-                        }
-                        // Add "xxx" option created dynamically
-                        if (option.inputValue) {
-                          return option.inputValue;
-                        }
-                        // Regular option
-                        return option.title;
-                      }}
-                      renderOption={(option) => option.title}
-                      style={{ width: 300 }}
-                      freeSolo
-                      renderInput={(params) => (
-                        <TextField
-                          {...params}
-                          label="Teacher"
-                          variant="outlined"
-                        />
-                      )}
-                    /> */}
-                    {/* <Autocomplete
-                      options={teachers ? teachers : []}
-                      disableClearable
-                      style={{ width: 180 }}
-                      value={c ? c.teacher : ""}
-                      getOptionLabel={(option) => option}
-                      onChange={(e, value: string | null) => {
-                        let newArr: Cls[] = [...(cls ?? [])];
-                        if (value) {
-                          newArr[i] = { ...newArr[i], teacher: value };
-                          setCls(newArr);
-                        }
-                      }}
-                      renderInput={(params) => (
-                        <TextField
-                          {...params}
-                          label="Teacher"
-                          // onChange={(e) => {
-                          //   let newArr: Cls[] = [...(cls ?? [])];
-                          //   newArr[i] = {
-                          //     ...newArr[i],
-                          //     teacher: e.target.value,
-                          //   };
-                          //   setCls(newArr);
-                          // }}
-                        />
-                      )}
-                    ></Autocomplete> */}
-                    {/* <Autocomplete
-                      options={teachers}
-                      getOptionLabel={(option) => option}
-                      renderInput={(params) => (
-                        <TextField
-                          {...params}
-                          label="Combo box"
-                          variant="outlined"
-                        />
-                      )}
-                    /> */}
                   </div>
                 </div>
               );
             })}
-          {/* {items.map((reptile, i) => (
-            <div key={i}>{reptile}</div>
-          ))} */}
         </ul>
       </div>
       <div
@@ -323,7 +223,7 @@ function EnterClasses(props: EnterClassesInterface) {
         >
           Submit
         </Button>
-        <p>{JSON.stringify(cls)}</p>
+        {/* <p>{JSON.stringify(cls)}</p> */}
       </div>
     </>
   );
