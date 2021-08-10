@@ -74,27 +74,44 @@ function App() {
   const [editMode, setEditMode] = useState(false);
 
   const classes = useStyles();
+  useEffect(() => {
+    firebase.auth().onAuthStateChanged(function (authuser) {
+      if (authuser && authuser.email!.includes("@fusdk12.net")) {
+        localStorage.setItem(
+          "googleinfo",
+          JSON.stringify({ email: authuser.email })
+        );
+        setLoggedIn({ email: authuser.email } as LoginInfo);
+        // setLoggedIn(true);
+        // User is signed in.
+      } else {
+        localStorage.clear();
+        setLoggedIn(null);
+        // No user is signed in.
+      }
+    });
+  }, []);
 
-  // useEffect(() => {
-  //   if (firebaseUserInfo && Object.keys(firebaseUserInfo.classes).length > 0) {
-  //     let test = Object.keys(firebaseUserInfo.classes).map((x, i) => {
-  //       return firebaseUserInfo.classes[x].id;
-  //     });
-  //     db.collection("Classes")
-  //       .where(firebase.firestore.FieldPath.documentId(), "in", test)
-  //       .get()
-  //       .then((snapshot) => {
-  //         let allClassmates = snapshot.docs.map((doc) => {
-  //           return doc.data() as FirebaseClassesCollection;
-  //         });
-  //         setClassmates(allClassmates);
-  //         localStorage.setItem("classmates", JSON.stringify(allClassmates));
-  //       })
-  //       .catch((error) => {
-  //         console.log("error", error);
-  //       });
-  //   }
-  // }, [firebaseUserInfo]);
+  useEffect(() => {
+    if (firebaseUserInfo && Object.keys(firebaseUserInfo.classes).length > 0) {
+      let test = Object.keys(firebaseUserInfo.classes).map((x, i) => {
+        return firebaseUserInfo.classes[x].id;
+      });
+      db.collection("Classes")
+        .where(firebase.firestore.FieldPath.documentId(), "in", test)
+        .get()
+        .then((snapshot) => {
+          let allClassmates = snapshot.docs.map((doc) => {
+            return doc.data() as FirebaseClassesCollection;
+          });
+          setClassmates(allClassmates);
+          localStorage.setItem("classmates", JSON.stringify(allClassmates));
+        })
+        .catch((error) => {
+          console.log("error", error);
+        });
+    }
+  }, [firebaseUserInfo]);
   function writetoFirebase(cls: Cls[]) {
     let user = firebase.auth().currentUser;
     if (!user) return;
@@ -178,21 +195,6 @@ function App() {
   const editClasses = () => {
     setEditMode(true);
   };
-
-  firebase.auth().onAuthStateChanged(function (authuser) {
-    if (authuser && authuser.email?.includes("@fusdk12.net")) {
-      localStorage.setItem(
-        "googleinfo",
-        JSON.stringify({ email: authuser.email })
-      );
-      setLoggedIn({ email: authuser.email } as LoginInfo);
-      // setLoggedIn(true);
-      // User is signed in.
-    } else {
-      setLoggedIn(null);
-      // No user is signed in.
-    }
-  });
 
   const TopBar = () => (
     <AppBar position="static">
