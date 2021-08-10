@@ -213,9 +213,9 @@ function App() {
         let classRef = db.collection("Classes").doc(`${c.teacher}-${c.period}`);
 
         let teachersRef = db.collection("Classes").doc("Teachers");
-        batch.update(teachersRef, {
-          allTeachers: firebase.firestore.FieldValue.arrayUnion(c.teacher),
-        });
+        // batch.update(teachersRef, {
+        //   allTeachers: firebase.firestore.FieldValue.arrayUnion(c.teacher),
+        // });
 
         if (!user) return;
         batch.set(
