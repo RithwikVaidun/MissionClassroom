@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from "react";
 import "./App.css";
 import firebase from "firebase";
-import { Button } from "@material-ui/core";
+import { Button, IconButton } from "@material-ui/core";
 
 import { createStyles, makeStyles, Theme } from "@material-ui/core/styles";
 import AppBar from "@material-ui/core/AppBar";
 import Toolbar from "@material-ui/core/Toolbar";
 import Typography from "@material-ui/core/Typography";
+import GitHubIcon from "@material-ui/icons/GitHub";
 
 import MyClasses from "./MyClasses";
 
@@ -111,7 +112,7 @@ function App() {
           console.log("error", error);
         });
     }
-  }, [firebaseUserInfo]);
+  }, [firebaseUserInfo, db]);
   function writetoFirebase(cls: Cls[]) {
     let user = firebase.auth().currentUser;
     if (!user) return;
@@ -202,6 +203,9 @@ function App() {
         <Typography variant="h6" className={classes.title}>
           Mission Classroom
         </Typography>
+        <IconButton href="https://github.com/RithwikVaidun/MissionClassroom">
+          <GitHubIcon />
+        </IconButton>
         {!loggedIn ? (
           <Button
             onClick={() => {
@@ -217,8 +221,7 @@ function App() {
               firebase.auth().signOut();
             }}
           >
-            Logout
-            {loggedIn.email}
+            Logout {loggedIn.email}
           </Button>
         )}
       </Toolbar>

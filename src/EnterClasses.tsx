@@ -131,7 +131,10 @@ function EnterClasses(props: EnterClassesInterface) {
         if (doc.exists) {
           let data = doc.data();
 
-          if (data) setTeachers(teachers.concat(data.allTeachers));
+          if (data) {
+            let newarr = [...new Set([...teachers, ...data.allTeachers])];
+            setTeachers(newarr);
+          }
         }
       });
   }, []);
