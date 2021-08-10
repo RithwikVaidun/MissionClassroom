@@ -106,49 +106,6 @@ function App() {
       }
     });
   }, []);
-
-  useEffect(() => {
-<<<<<<< HEAD
-    // if (firebaseUserInfo && Object.keys(firebaseUserInfo.classes).length > 0) {
-    //   let test = Object.keys(firebaseUserInfo.classes).map((x, i) => {
-    //     return firebaseUserInfo.classes[x].id;
-    //   });
-    //   db.collection("Classes")
-    //     .where(firebase.firestore.FieldPath.documentId(), "in", test)
-    //     .get()
-    //     .then((snapshot) => {
-    //       let allClassmates = snapshot.docs.map((doc) => {
-    //         return doc.data() as FirebaseClassesCollection;
-    //       });
-    //       setClassmates(allClassmates);
-    //       localStorage.setItem("classmates", JSON.stringify(allClassmates));
-    //     })
-    //     .catch((error) => {
-    //       console.log("error", error);
-    //     });
-    // }
-  }, [firebaseUserInfo]);
-=======
-    if (firebaseUserInfo && Object.keys(firebaseUserInfo.classes).length > 0) {
-      let test = Object.keys(firebaseUserInfo.classes).map((x, i) => {
-        return firebaseUserInfo.classes[x].id;
-      });
-      db.collection("Classes")
-        .where(firebase.firestore.FieldPath.documentId(), "in", test)
-        .get()
-        .then((snapshot) => {
-          let allClassmates = snapshot.docs.map((doc) => {
-            return doc.data() as FirebaseClassesCollection;
-          });
-          setClassmates(allClassmates);
-          localStorage.setItem("classmates", JSON.stringify(allClassmates));
-        })
-        .catch((error) => {
-          console.log("error", error);
-        });
-    }
-  }, [firebaseUserInfo, db]);
->>>>>>> 1a36bfcd8ca8c7c989d214b82955622f439eb913
   function writetoFirebase(cls: Cls[]) {
     let user = firebase.auth().currentUser;
     if (!user) return;
