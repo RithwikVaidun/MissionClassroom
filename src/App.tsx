@@ -135,7 +135,7 @@ function App() {
     };
 
     if (!cls) return;
-    cls.forEach((c, i, a) => {
+    cls.forEach((c) => {
       if (c && c.teacher && c.period) {
         // Update the firebase user info
         userInfo.classes[c.period] = {
@@ -264,9 +264,6 @@ function App() {
     <>
       <TopBar />
       <EnterClasses writeToDatabase={writetoFirebase} classes={null} />
-
-      {/* <p>{JSON.stringify(user)}</p> */}
-      {/* <p>{JSON.stringify(cls)}</p> */}
     </>
   );
 }
