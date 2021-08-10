@@ -4,7 +4,7 @@ import "./index.css";
 import App from "./App";
 import reportWebVitals from "./reportWebVitals";
 import firebase from "firebase";
-import SignIn from "./SignIn";
+// import SignIn from "./SignIn";
 
 import { BrowserRouter as Router, Switch, Route, Link } from "react-router-dom";
 
@@ -31,10 +31,11 @@ firebase.initializeApp(firebaseConfig);
 
 ReactDOM.render(
   <React.Fragment>
-    <Router>
+    <App />
+    {/* <Router>
       <Route exact path="/" component={App} />
       <Route exact path="/signin" component={SignIn} />
-    </Router>
+    </Router> */}
   </React.Fragment>,
   document.getElementById("root")
 );

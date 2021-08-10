@@ -54,13 +54,15 @@ const useStyles = makeStyles((theme: Theme) =>
     },
   })
 );
-
+interface LoginInfo {
+  email: string;
+}
 function App() {
   const firebaseApp = firebase.apps[0];
   const db = firebaseApp.firestore();
 
-  const [loggedIn, setLoggedIn] = useState<boolean>(
-    localStorage.getItem("firebaseuser") ? true : false
+  const [loggedIn, setLoggedIn] = useState<LoginInfo | null>(
+    JSON.parse(localStorage.getItem("googleinfo") as string)
   );
   const [firebaseUserInfo, setFirebaseUserInfo] =
     useState<FirebaseUsersCollection | null>(
@@ -73,26 +75,26 @@ function App() {
 
   const classes = useStyles();
 
-  useEffect(() => {
-    if (firebaseUserInfo && Object.keys(firebaseUserInfo.classes).length > 0) {
-      let test = Object.keys(firebaseUserInfo.classes).map((x, i) => {
-        return firebaseUserInfo.classes[x].id;
-      });
-      db.collection("Classes")
-        .where(firebase.firestore.FieldPath.documentId(), "in", test)
-        .get()
-        .then((snapshot) => {
-          let allClassmates = snapshot.docs.map((doc) => {
-            return doc.data() as FirebaseClassesCollection;
-          });
-          setClassmates(allClassmates);
-          localStorage.setItem("classmates", JSON.stringify(allClassmates));
-        })
-        .catch((error) => {
-          console.log("error", error);
-        });
-    }
-  }, [firebaseUserInfo]);
+  // useEffect(() => {
+  //   if (firebaseUserInfo && Object.keys(firebaseUserInfo.classes).length > 0) {
+  //     let test = Object.keys(firebaseUserInfo.classes).map((x, i) => {
+  //       return firebaseUserInfo.classes[x].id;
+  //     });
+  //     db.collection("Classes")
+  //       .where(firebase.firestore.FieldPath.documentId(), "in", test)
+  //       .get()
+  //       .then((snapshot) => {
+  //         let allClassmates = snapshot.docs.map((doc) => {
+  //           return doc.data() as FirebaseClassesCollection;
+  //         });
+  //         setClassmates(allClassmates);
+  //         localStorage.setItem("classmates", JSON.stringify(allClassmates));
+  //       })
+  //       .catch((error) => {
+  //         console.log("error", error);
+  //       });
+  //   }
+  // }, [firebaseUserInfo]);
   function writetoFirebase(cls: Cls[]) {
     let user = firebase.auth().currentUser;
     if (!user) return;
@@ -121,16 +123,15 @@ function App() {
           allTeachers: firebase.firestore.FieldValue.arrayUnion(c.teacher),
         });
 
-        if (!user) return;
         batch.set(
           classRef,
           {
             period: c.period,
             teacher: c.teacher,
             students: firebase.firestore.FieldValue.arrayUnion({
-              name: user.displayName,
-              id: user.uid,
-              photo: user.photoURL,
+              name: user!.displayName,
+              id: user!.uid,
+              photo: user!.photoURL,
             }),
           },
           { merge: true }
@@ -150,12 +151,11 @@ function App() {
           let oldClassRef = db
             .collection("Classes")
             .doc(firebaseUserInfo.classes[x].id);
-          if (!user) return;
           batch.update(oldClassRef, {
             students: firebase.firestore.FieldValue.arrayRemove({
-              name: user.displayName,
-              id: user.uid,
-              photo: user.photoURL,
+              name: user!.displayName,
+              id: user!.uid,
+              photo: user!.photoURL,
             }),
           });
         }
@@ -164,9 +164,8 @@ function App() {
 
     batch.set(userRef, userInfo);
     batch.commit().then(() => {
-      if (!user) return;
       db.collection("Users")
-        .doc(user.uid)
+        .doc(user!.uid)
         .get()
         .then((snapshot) => {
           setFirebaseUserInfo(snapshot.data() as FirebaseUsersCollection);
@@ -180,12 +179,17 @@ function App() {
     setEditMode(true);
   };
 
-  firebase.auth().onAuthStateChanged(function (user) {
-    if (user && user.email?.includes("@fusdk12.net")) {
-      setLoggedIn(true);
+  firebase.auth().onAuthStateChanged(function (authuser) {
+    if (authuser && authuser.email?.includes("@fusdk12.net")) {
+      localStorage.setItem(
+        "googleinfo",
+        JSON.stringify({ email: authuser.email })
+      );
+      setLoggedIn({ email: authuser.email } as LoginInfo);
+      // setLoggedIn(true);
       // User is signed in.
     } else {
-      setLoggedIn(false);
+      setLoggedIn(null);
       // No user is signed in.
     }
   });
@@ -212,9 +216,7 @@ function App() {
             }}
           >
             Logout
-            {/* {firebase.auth().currentUser
-              ? firebase.auth().currentUser!.email
-              : null} */}
+            {loggedIn.email}
           </Button>
         )}
       </Toolbar>
@@ -242,6 +244,7 @@ function App() {
       </>
     );
   }
+  console.log("rereindering");
   return (
     <>
       <TopBar />
