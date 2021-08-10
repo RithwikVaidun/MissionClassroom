@@ -1,4 +1,3 @@
-import React from "react";
 import {
   Button,
   Card,
@@ -49,7 +48,6 @@ function MyClasses(props: MyClassesInterface) {
                   </h2>
                 </div>
 
-                {/* <Typography className={classes.pos} color="textSecondary"> */}
                 {c.students.map((s: any, j: any) => (
                   <div>
                     <Paper className={classes.paper}>
@@ -64,7 +62,6 @@ function MyClasses(props: MyClassesInterface) {
                     </Paper>
                   </div>
                 ))}
-                {/* </Typography> */}
               </CardContent>
             </Card>
           </div>

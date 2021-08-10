@@ -18,7 +18,7 @@ export default function FreeSoloCreateOption(props: AutoC) {
   return (
     <Autocomplete
       value={props.c.teacher}
-      onChange={(event, newValue) => {
+      onChange={(_, newValue) => {
         let newArr: Cls[] = [...(props.cls ?? [])];
         newArr[props.i] = { ...newArr[props.i], teacher: newValue as string };
         props.setCls(newArr);
