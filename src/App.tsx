@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from "react";
 import "./App.css";
 import firebase from "firebase";
-import { Button } from "@material-ui/core";
+import { Button, IconButton } from "@material-ui/core";
 
 import { createStyles, makeStyles, Theme } from "@material-ui/core/styles";
 import AppBar from "@material-ui/core/AppBar";
 import Toolbar from "@material-ui/core/Toolbar";
 import Typography from "@material-ui/core/Typography";
+import GitHubIcon from "@material-ui/icons/GitHub";
 
 import MyClasses from "./MyClasses";
 
@@ -107,6 +108,7 @@ function App() {
   }, []);
 
   useEffect(() => {
+<<<<<<< HEAD
     // if (firebaseUserInfo && Object.keys(firebaseUserInfo.classes).length > 0) {
     //   let test = Object.keys(firebaseUserInfo.classes).map((x, i) => {
     //     return firebaseUserInfo.classes[x].id;
@@ -126,6 +128,27 @@ function App() {
     //     });
     // }
   }, [firebaseUserInfo]);
+=======
+    if (firebaseUserInfo && Object.keys(firebaseUserInfo.classes).length > 0) {
+      let test = Object.keys(firebaseUserInfo.classes).map((x, i) => {
+        return firebaseUserInfo.classes[x].id;
+      });
+      db.collection("Classes")
+        .where(firebase.firestore.FieldPath.documentId(), "in", test)
+        .get()
+        .then((snapshot) => {
+          let allClassmates = snapshot.docs.map((doc) => {
+            return doc.data() as FirebaseClassesCollection;
+          });
+          setClassmates(allClassmates);
+          localStorage.setItem("classmates", JSON.stringify(allClassmates));
+        })
+        .catch((error) => {
+          console.log("error", error);
+        });
+    }
+  }, [firebaseUserInfo, db]);
+>>>>>>> 1a36bfcd8ca8c7c989d214b82955622f439eb913
   function writetoFirebase(cls: Cls[]) {
     let user = firebase.auth().currentUser;
     if (!user) return;
@@ -216,6 +239,9 @@ function App() {
         <Typography variant="h6" className={classes.title}>
           Mission Classroom
         </Typography>
+        <IconButton href="https://github.com/RithwikVaidun/MissionClassroom">
+          <GitHubIcon />
+        </IconButton>
         {!loggedIn ? (
           <Button
             onClick={() => {
@@ -231,8 +257,7 @@ function App() {
               firebase.auth().signOut();
             }}
           >
-            Logout
-            {loggedIn.email}
+            Logout {loggedIn.email}
           </Button>
         )}
       </Toolbar>
