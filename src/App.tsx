@@ -75,6 +75,20 @@ function App() {
 
   const classes = useStyles();
   useEffect(() => {
+    if (firebaseUserInfo && Object.keys(firebaseUserInfo.classes).length > 0) {
+      let test = Object.keys(firebaseUserInfo.classes).map((x, i) => {
+        return firebaseUserInfo.classes[x].id;
+      });
+      db.collection("Classes")
+        .where(firebase.firestore.FieldPath.documentId(), "in", test)
+        .onSnapshot((snapshot) => {
+          let allClassmates = snapshot.docs.map((doc) => {
+            return doc.data() as FirebaseClassesCollection;
+          });
+          setClassmates(allClassmates);
+          localStorage.setItem("classmates", JSON.stringify(allClassmates));
+        });
+    }
     firebase.auth().onAuthStateChanged(function (authuser) {
       if (authuser && authuser.email!.includes("@fusdk12.net")) {
         localStorage.setItem(
@@ -93,24 +107,24 @@ function App() {
   }, []);
 
   useEffect(() => {
-    if (firebaseUserInfo && Object.keys(firebaseUserInfo.classes).length > 0) {
-      let test = Object.keys(firebaseUserInfo.classes).map((x, i) => {
-        return firebaseUserInfo.classes[x].id;
-      });
-      db.collection("Classes")
-        .where(firebase.firestore.FieldPath.documentId(), "in", test)
-        .get()
-        .then((snapshot) => {
-          let allClassmates = snapshot.docs.map((doc) => {
-            return doc.data() as FirebaseClassesCollection;
-          });
-          setClassmates(allClassmates);
-          localStorage.setItem("classmates", JSON.stringify(allClassmates));
-        })
-        .catch((error) => {
-          console.log("error", error);
-        });
-    }
+    // if (firebaseUserInfo && Object.keys(firebaseUserInfo.classes).length > 0) {
+    //   let test = Object.keys(firebaseUserInfo.classes).map((x, i) => {
+    //     return firebaseUserInfo.classes[x].id;
+    //   });
+    //   db.collection("Classes")
+    //     .where(firebase.firestore.FieldPath.documentId(), "in", test)
+    //     .get()
+    //     .then((snapshot) => {
+    //       let allClassmates = snapshot.docs.map((doc) => {
+    //         return doc.data() as FirebaseClassesCollection;
+    //       });
+    //       setClassmates(allClassmates);
+    //       localStorage.setItem("classmates", JSON.stringify(allClassmates));
+    //     })
+    //     .catch((error) => {
+    //       console.log("error", error);
+    //     });
+    // }
   }, [firebaseUserInfo]);
   function writetoFirebase(cls: Cls[]) {
     let user = firebase.auth().currentUser;
