@@ -146,6 +146,15 @@ function EnterClasses(props: EnterClassesInterface) {
           display: "flex",
           justifyContent: "center",
           alignItems: "center",
+        }}
+      >
+        <h1>Upload your schedule. Add a teacher if it doesn't exist.</h1>
+      </div>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
           height: "60vh",
         }}
       >
