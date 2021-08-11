@@ -4,6 +4,9 @@ import "./index.css";
 import App from "./App";
 import reportWebVitals from "./reportWebVitals";
 import firebase from "firebase";
+import Everyone from "./Everyone";
+// import { Route, Router } from "react-router-dom";
+import { BrowserRouter as Router, Switch, Route, Link } from "react-router-dom";
 
 // var firebaseConfig = {
 //   apiKey: "AIzaSyDWZVyOM16RflypWWXcC1Hu2R-a1e50glY",
@@ -28,11 +31,10 @@ firebase.initializeApp(firebaseConfig);
 
 ReactDOM.render(
   <React.Fragment>
-    <App />
-    {/* <Router>
+    <Router>
       <Route exact path="/" component={App} />
-      <Route exact path="/signin" component={SignIn} />
-    </Router> */}
+      <Route exact path="/everyone" component={Everyone} />
+    </Router>
   </React.Fragment>,
   document.getElementById("root")
 );
