@@ -1,11 +1,8 @@
 import { useEffect, useState } from "react";
 import firebase from "firebase";
 import {
-  Button,
   Card,
   CardContent,
-  Paper,
-  Grid,
   Avatar,
   Typography,
   List,
@@ -13,6 +10,7 @@ import {
   ListItemText,
   ListItemAvatar,
 } from "@material-ui/core";
+import TopBar from "./TopBar";
 
 function Everyone() {
   const firebaseApp = firebase.apps[0];
@@ -53,7 +51,12 @@ function Everyone() {
       });
   }, []);
 
-  return <div>{everyone}</div>;
+  return (
+    <>
+      <TopBar />
+      {everyone}
+    </>
+  );
 }
 
 export default Everyone;

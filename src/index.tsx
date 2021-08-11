@@ -6,7 +6,8 @@ import reportWebVitals from "./reportWebVitals";
 import firebase from "firebase";
 import Everyone from "./Everyone";
 // import { Route, Router } from "react-router-dom";
-import { BrowserRouter as Router, Switch, Route, Link } from "react-router-dom";
+import { BrowserRouter as Router, Route } from "react-router-dom";
+import { FirebaseAuthProvider, useFirebaseAuth } from "./FirebaseAuthContext";
 
 // var firebaseConfig = {
 //   apiKey: "AIzaSyDWZVyOM16RflypWWXcC1Hu2R-a1e50glY",
@@ -31,10 +32,12 @@ firebase.initializeApp(firebaseConfig);
 
 ReactDOM.render(
   <React.Fragment>
-    <Router>
-      <Route exact path="/" component={App} />
-      <Route exact path="/everyone" component={Everyone} />
-    </Router>
+    <FirebaseAuthProvider>
+      <Router>
+        <Route exact path="/" component={App} />
+        <Route exact path="/everyone" component={Everyone} />
+      </Router>
+    </FirebaseAuthProvider>
   </React.Fragment>,
   document.getElementById("root")
 );
